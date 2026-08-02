@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" name="viewport"/>
+<title>NetSpeed Meter - History</title>
+<link rel="stylesheet" href="styles.css"/>
+<style>
+  body {
+    background-image: radial-gradient(circle at 50% -20%, rgba(0,223,193,0.12), transparent 60%),
+                      radial-gradient(circle at 100% 100%, rgba(0,218,248,0.08), transparent 50%);
+  }
+  .grade-excellent { background: rgba(0,223,193,0.15); color: #00dfc1; }
+  .grade-good { background: rgba(0,223,193,0.1); color: #00dfc1; }
+  .grade-fair { background: rgba(255,180,0,0.15); color: #ffb400; }
+  .grade-poor { background: rgba(255,180,171,0.15); color: #ffb4ab; }
+</style>
+</head>
+<body class="text-on-surface font-body h-screen w-full overflow-hidden flex flex-col relative antialiased page-enter">
+
+<!-- Ambient Background -->
+<div class="absolute top-[-10%] left-[-10%] w-96 h-96 bg-primary/5 rounded-[40%_60%_70%_30%] blur-xl pointer-events-none animate-spin"></div>
+<div class="absolute bottom-[10%] right-[-10%] w-[30rem] h-[30rem] bg-tertiary/5 rounded-[60%_40%_30%_70%] blur-xl pointer-events-none animate-spin-reverse"></div>
+
+<!-- TopAppBar -->
+<header class="flex justify-between items-center w-full px-6 py-4 text-primary font-headline font-bold tracking-tight z-40 shrink-0">
+  <div class="flex items-center gap-3 liquid-bubble px-4 py-2 rounded-2xl">
+    <span class="material-symbols-outlined text-primary text-xl">📋</span>
+    <span class="text-xl font-black tracking-tighter text-primary">Test History</span>
+  </div>
+  <button onclick="refreshHistory()" class="w-10 h-10 rounded-full flex items-center justify-center liquid-bubble text-on-surface-variant hover:text-primary transition-colors">
+    <span class="material-symbols-outlined text-xl">🔄</span>
+  </button>
+</header>
+
+<!-- Main Content -->
+<main class="flex-1 overflow-y-auto pb-32 flex flex-col items-center relative z-10 px-4">
+
+  <!-- Summary Stats -->
+  <div id="summarySection" class="w-full max-w-sm mb-6 hidden">
+    <div class="liquid-card rounded-2xl p-5">
+      <span class="font-label text-[0.6rem] uppercase tracking-widest text-on-surface-variant/60 mb-3 block">Summary</span>
+      <div class="grid grid-cols-3 gap-3">
+        <div class="text-center">
+          <span id="avgDownload" class="font-headline text-xl font-bold text-primary block">--</span>
+          <span class="font-label text-[0.5rem] uppercase tracking-wider text-on-surface-variant/50">Avg Down</span>
+        </div>
+        <div class="text-center">
+          <span id="avgUpload" class="font-headline text-xl font-bold text-tertiary block">--</span>
+          <span class="font-label text-[0.5rem] uppercase tracking-wider text-on-surface-variant/50">Avg Up</span>
+        </div>
+        <div class="text-center">
+          <span id="avgPing" class="font-headline text-xl font-bold text-on-surface block">--</span>
+          <span class="font-label text-[0.5rem] uppercase tracking-wider text-on-surface-variant/50">Avg Ping</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Comparison Bar Chart -->
+  <div id="chartSection" class="w-full max-w-sm mb-6 hidden">
+    <div class="liquid-card rounded-2xl p-5">
+      <span class="font-label text-[0.6rem] uppercase tracking-widest text-on-surface-variant/60 mb-3 block">Speed Comparison</span>
+      <div id="barChart" class="flex flex-col gap-2"></div>
+    </div>
+  </div>
+
+  <!-- History List -->
+  <div id="historyList" class="w-full max-w-sm flex flex-col gap-3">
+    <div class="text-center py-12">
+      <span class="material-symbols-outlined text-5xl text-on-surface-variant/20 block mb-3">📋</span>
+      <p class="font-body text-sm text-on-surface-variant/50">Loading history...</p>
+    </div>
+  </div>
+
+  <!-- Empty State -->
+  <div id="emptyState" class="w-full max-w-sm hidden flex-col items-center py-16">
+    <span class="material-symbols-outlined text-6xl text-on-surface-variant/15 mb-4">⚡</span>
+    <p class="font-headline text-lg font-bold text-on-surface-variant/40 mb-2">No Tests Yet</p>
+    <p class="font-body text-sm text-on-surface-variant/30 text-center mb-6">Run your first speed test to see results here</p>
+    <button onclick="window.location.href='area_test.html'" class="liquid-bubble rounded-full px-8 py-3 text-sm font-label font-semibold text-primary">
+      <span class="material-symbols-outlined text-lg align-middle mr-1">📡</span> Start Test
+    </button>
+  </div>
+</main>
+
+<!-- BottomNavBar -->
+<nav class="fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-4 pb-6 pt-4 liquid-card border-t border-white/10 font-label text-[10px] font-semibold uppercase tracking-widest rounded-t-[2.5rem]">
+  <a class="flex flex-col items-center justify-center text-on-surface-variant/60 hover:text-primary transition-all px-4 py-1" href="home.html">
+    <span class="material-symbols-outlined mb-1 text-2xl">🏠</span> <span>Home</span>
+  </a>
+  <a class="flex flex-col items-center justify-center text-on-surface-variant/60 hover:text-primary transition-all px-4 py-1" href="area_test.html">
+    <span class="material-symbols-outlined mb-1 text-2xl">⚡</span> <span>Test</span>
+  </a>
+  <a class="flex flex-col items-center justify-center text-primary liquid-bubble rounded-2xl px-5 py-2" href="#" style="box-shadow: 0 4px 15px rgba(0,223,193,0.15);">
+    <span class="material-symbols-outlined mb-1 text-2xl">📋</span> <span>History</span>
+  </a>
+  <a class="flex flex-col items-center justify-center text-on-surface-variant/60 hover:text-primary transition-all px-4 py-1" href="settings.html">
+    <span class="material-symbols-outlined mb-1 text-2xl">⚙️</span> <span>Settings</span>
+  </a>
+</nav>
+
+<script>
+function getGrade(dl, ping, jitter, loss) {
+  if (dl >= 100 && ping < 20 && jitter < 5 && loss < 0.5) return { label:'Excellent', cls:'grade-excellent' };
+  if (dl >= 50 && ping < 50 && jitter < 15 && loss < 2) return { label:'Good', cls:'grade-good' };
+  if (dl >= 20 && ping < 100 && jitter < 30 && loss < 5) return { label:'Fair', cls:'grade-fair' };
+  return { label:'Poor', cls:'grade-poor' };
+}
+
+function formatDate(ts) {
+  var d = new Date(ts);
+  var now = new Date();
+  var diff = now - d;
+  if (diff < 60000) return 'Just now';
+  if (diff < 3600000) return Math.floor(diff/60000) + 'm ago';
+  if (diff < 86400000) return Math.floor(diff/3600000) + 'h ago';
+  if (diff < 604800000) return Math.floor(diff/86400000) + 'd ago';
+  return d.toLocaleDateString('en-US', { month:'short', day:'numeric' });
+}
+
+function getNetworkIcon(type) {
+  var t = (type||'').toLowerCase();
+  if (t.indexOf('wifi') !== -1) return '📶';
+  if (t.indexOf('5g') !== -1) return '📡';
+  if (t.indexOf('4g') !== -1 || t.indexOf('lte') !== -1) return '📶';
+  if (t.indexOf('3g') !== -1) return '📶';
+  if (t.indexOf('ethernet') !== -1) return '🔌';
+  return '📡';
+}
+
+window.onHistoryResult = function(historyJson) {
+  var data = typeof historyJson === 'string' ? JSON.parse(historyJson) : historyJson;
+
+  if (!data || data.length === 0) {
+    document.getElementById('historyList').classList.add('hidden');
+    document.getElementById('emptyState').classList.remove('hidden');
+    document.getElementById('summarySection').classList.add('hidden');
+    document.getElementById('chartSection').classList.add('hidden');
+    return;
+  }
+
+  document.getElementById('emptyState').classList.add('hidden');
+  document.getElementById('summarySection').classList.remove('hidden');
+  document.getElementById('chartSection').classList.remove('hidden');
+
+  renderSummary(data);
+  renderBarChart(data);
+  renderList(data);
+};
+
+function renderSummary(data) {
+  var sumDl = 0, sumUl = 0, sumPing = 0;
+  for (var i = 0; i < data.length; i++) {
+    sumDl += data[i].downloadResult;
+    sumUl += data[i].uploadResult;
+    sumPing += data[i].pingScore;
+  }
+  document.getElementById('avgDownload').textContent = (sumDl / data.length).toFixed(1);
+  document.getElementById('avgUpload').textContent = (sumUl / data.length).toFixed(1);
+  document.getElementById('avgPing').textContent = Math.round(sumPing / data.length);
+}
+
+function renderBarChart(data) {
+  var recent = data.slice(0, 5).reverse();
+  var maxDl = 1, maxUl = 1;
+  for (var i = 0; i < recent.length; i++) {
+    if (recent[i].downloadResult > maxDl) maxDl = recent[i].downloadResult;
+    if (recent[i].uploadResult > maxUl) maxUl = recent[i].uploadResult;
+  }
+  var chartMax = Math.max(maxDl, maxUl);
+
+  var container = document.getElementById('barChart');
+  var html = '';
+  for (var j = 0; j < recent.length; j++) {
+    var item = recent[j];
+    var dlPct = (item.downloadResult / chartMax) * 100;
+    var ulPct = (item.uploadResult / chartMax) * 100;
+    var date = formatDate(item.timestamp);
+    html += '<div class="flex items-center gap-2 slide-up" style="animation-delay:'+(j*0.08)+'s">'+
+      '<span class="font-label text-[0.5rem] text-on-surface-variant/50 w-10 text-right shrink-0">'+date+'</span>'+
+      '<div class="flex-1 flex flex-col gap-1">'+
+        '<div class="h-3 rounded-full bg-primary/10 overflow-hidden">'+
+          '<div class="h-full rounded-full" style="width:'+dlPct+'%; background: linear-gradient(to right, rgba(0,223,193,0.6), #00dfc1); transition: width 0.8s cubic-bezier(0.4,0,0.2,1)"></div>'+
+        '</div>'+
+        '<div class="h-3 rounded-full bg-tertiary/10 overflow-hidden">'+
+          '<div class="h-full rounded-full" style="width:'+ulPct+'%; background: linear-gradient(to right, rgba(0,218,248,0.6), #00daf8); transition: width 0.8s cubic-bezier(0.4,0,0.2,1)"></div>'+
+        '</div>'+
+      '</div>'+
+      '<span class="font-label text-[0.5rem] text-on-surface-variant/60 w-12 text-left shrink-0">\u2193'+item.downloadResult.toFixed(0)+' \u2191'+item.uploadResult.toFixed(0)+'</span>'+
+    '</div>';
+  }
+  html += '<div class="flex items-center gap-4 mt-2 pt-2 border-t border-white/5">'+
+    '<div class="flex items-center gap-1.5"><div class="w-2.5 h-2.5 rounded-full bg-primary"></div><span class="font-label text-[0.5rem] text-on-surface-variant/50">Download</span></div>'+
+    '<div class="flex items-center gap-1.5"><div class="w-2.5 h-2.5 rounded-full bg-tertiary"></div><span class="font-label text-[0.5rem] text-on-surface-variant/50">Upload</span></div>'+
+  '</div>';
+  container.innerHTML = html;
+}
+
+function renderList(data) {
+  var container = document.getElementById('historyList');
+  var html = '';
+  for (var i = 0; i < data.length; i++) {
+    var item = data[i];
+    var grade = getGrade(item.downloadResult, item.pingScore, item.jitter||0, item.packetLoss||0);
+    var icon = getNetworkIcon(item.connectionType);
+    var date = formatDate(item.timestamp);
+    var time = new Date(item.timestamp).toLocaleTimeString('en-US', { hour:'2-digit', minute:'2-digit' });
+
+    html += '<div class="liquid-card rounded-2xl p-4 slide-up" style="animation-delay:'+(i*0.06)+'s">'+
+      '<div class="flex items-center gap-3">'+
+        '<div class="w-11 h-11 rounded-xl liquid-bubble flex items-center justify-center text-primary shrink-0">'+
+          '<span class="material-symbols-outlined text-lg">'+icon+'</span>'+
+        '</div>'+
+        '<div class="flex-1 min-w-0">'+
+          '<div class="flex items-center gap-2">'+
+            '<span class="font-headline text-sm font-bold text-on-surface truncate">'+(item.ispName||'Unknown')+'</span>'+
+            '<span class="'+grade.cls+' font-label text-[0.55rem] font-bold uppercase px-2 py-0.5 rounded-full shrink-0">'+grade.label+'</span>'+
+          '</div>'+
+          '<p class="font-body text-[0.65rem] text-on-surface-variant/60 mt-0.5">'+date+' \u00B7 '+time+' \u00B7 '+(item.connectionType||'Unknown')+'</p>'+
+        '</div>'+
+        '<div class="text-right shrink-0">'+
+          '<span class="font-headline text-lg font-bold text-primary block">'+item.downloadResult.toFixed(0)+'</span>'+
+          '<span class="font-label text-[0.5rem] text-on-surface-variant/50 uppercase">Mbps</span>'+
+        '</div>'+
+      '</div>'+
+    '</div>';
+  }
+  container.innerHTML = html;
+}
+
+function refreshHistory() {
+  if (window.AndroidBridge) {
+    window.AndroidBridge.getHistory();
+  }
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+  if (window.AndroidBridge) {
+    window.AndroidBridge.getHistory();
+  } else {
+    window.onHistoryResult([]);
+  }
+});
+</script>
+</body></html>

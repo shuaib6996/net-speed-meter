@@ -1,0 +1,114 @@
+# Android USB Debugging Commands for NetSpeed Meter
+
+## 1. Check ADB Installation
+adb version
+
+## 2. List Connected Devices
+adb devices
+
+## 3. Check if Device is Authorized
+adb devices -l
+
+## 4. Enable USB Debugging on Android Device
+# Steps on device:
+# 1. Go to Settings > About Phone
+# 2. Tap "Build Number" 7 times to enable Developer Options
+# 3. Go back to Settings > Developer Options
+# 4. Enable "USB Debugging"
+
+## 5. Grant USB Debugging Permission
+# When first connecting, check device screen for "Allow USB debugging?" dialog
+# Click "Always allow from this computer" and tap OK
+
+## 6. Install the App via USB
+# Build the APK first (from Android Studio or command line)
+# Then install:
+adb install app/build/outputs/apk/debug/app-debug.apk
+
+## 7. Install with Overwrite (if already installed)
+adb install -r app/build/outputs/apk/debug/app-debug.apk
+
+## 8. Launch the App
+adb shell am start -n com.netspeedmeter/.MainActivity
+
+## 9. View Logs from App
+adb logcat -s "NetSpeedMeter"
+
+## 10. Filter Logs for Specific Tags
+adb logcat | findstr "NetSpeedMeter"
+# or on Linux/Mac:
+# adb logcat | grep "NetSpeedMeter"
+
+## 11. Clear App Data
+adb shell pm clear com.netspeedmeter
+
+## 12. Uninstall App
+adb uninstall com.netspeedmeter
+
+## 13. Push Files to Device
+adb push local_file.txt /sdcard/
+
+## 14. Pull Files from Device
+adb pull /sdcard/file.txt .
+
+## 15. Check Device Info
+adb shell getprop ro.product.model
+adb shell getprop ro.build.version.sdk
+
+## 16. Reboot Device
+adb reboot
+
+## 17. Reboot to Bootloader
+adb reboot bootloader
+
+## 18. Check Permissions
+adb shell dumpsys package com.netspeedmeter | findstr permission
+
+## 19. Grant Overlay Permission (Required for floating widget)
+adb shell appops set com.netspeedmeter SYSTEM_ALERT_WINDOW allow
+
+## 20. Grant Other Runtime Permissions
+adb shell pm grant com.netspeedmeter android.permission.POST_NOTIFICATIONS
+adb shell pm grant com.netspeedmeter android.permission.FOREGROUND_SERVICE
+
+## 21. Monitor Network Traffic
+adb shell dumpsys netstats | findstr "uid=com.netspeedmeter"
+
+## 22. Check Running Services
+adb shell dumpsys activity services com.netspeedmeter
+
+## 23. Force Stop App
+adb shell am force-stop com.netspeedmeter
+
+## 24. Take Screenshot
+adb exec-out screencap -p > screenshot.png
+
+## 25. Record Screen
+adb shell screenrecord /sdcard/demo.mp4
+# Press Ctrl+C to stop recording
+adb pull /sdcard/demo.mp4 .
+
+## Troubleshooting Commands:
+
+# If device not showing:
+adb kill-server
+adb start-server
+adb devices
+
+# Check USB connection:
+adb usb
+
+# Wireless debugging (Android 11+):
+# 1. Pair with pairing code:
+adb pair 192.168.1.100:12345
+# 2. Connect:
+adb connect 192.168.1.100:12345
+
+# Check if app is debuggable:
+adb shell getprop ro.debuggable
+
+# List all packages:
+adb shell pm list packages | findstr netspeed
+
+# Check app version:
+adb shell dumpsys package com.netspeedmeter | findstr versionName

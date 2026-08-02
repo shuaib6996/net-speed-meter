@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" name="viewport"/>
+<title>NetSpeed Meter - Home</title>
+<link rel="stylesheet" href="styles.css"/>
+<style>
+  body {
+    background-image: radial-gradient(circle at 50% -20%, rgba(0,223,193,0.15), transparent 60%),
+                      radial-gradient(circle at 100% 100%, rgba(0,218,248,0.1), transparent 50%);
+  }
+  .speed-ring {
+    border-width: 4px;
+    border-style: solid;
+    border-color: transparent;
+    border-top-color: rgba(0,223,193,0.8);
+    border-right-color: rgba(0,223,193,0.4);
+    transform: rotate(45deg);
+    filter: drop-shadow(0 0 20px rgba(0,223,193,0.6));
+  }
+  .speed-ring-inner {
+    border-width: 2px;
+    border-style: solid;
+    border-color: transparent;
+    border-bottom-color: rgba(0,218,248,0.6);
+    border-left-color: rgba(0,218,248,0.3);
+    transform: rotate(-30deg);
+  }
+</style>
+</head>
+<body class="text-on-surface font-body h-screen w-full overflow-hidden flex flex-col relative antialiased page-enter">
+
+<!-- Ambient Background Glows -->
+<div class="absolute top-[-10%] left-[-10%] w-96 h-96 bg-primary/10 rounded-[40%_60%_70%_30%] blur-xl pointer-events-none animate-spin"></div>
+<div class="absolute bottom-[10%] right-[-10%] w-[30rem] h-[30rem] bg-tertiary/10 rounded-[60%_40%_30%_70%] blur-xl pointer-events-none animate-spin-reverse"></div>
+<div class="absolute top-[40%] right-[20%] w-[20rem] h-[20rem] bg-primary/5 rounded-[50%_50%_40%_60%] blur-xl pointer-events-none animate-pulse-slow"></div>
+
+<!-- TopAppBar -->
+<header class="flex justify-between items-center w-full px-6 py-4 text-primary font-headline font-bold tracking-tight z-40 bg-transparent">
+  <div class="flex items-center gap-3 liquid-bubble px-4 py-2 rounded-2xl">
+    <span class="material-symbols-outlined text-primary text-xl">⚡</span>
+    <span class="text-xl font-black tracking-tighter text-primary">NetSpeed Meter</span>
+  </div>
+  <div class="w-10 h-10 rounded-full flex items-center justify-center overflow-hidden liquid-bubble text-on-surface-variant">
+    <span class="material-symbols-outlined text-xl">👤</span>
+  </div>
+</header>
+
+<!-- Main Content -->
+<main class="flex-1 overflow-y-auto pb-32 pt-8 flex flex-col items-center relative z-10 px-6">
+  <!-- Central Circular Speed Meter -->
+  <div class="relative w-[16rem] h-[16rem] flex items-center justify-center mt-4 mb-10 shrink-0">
+    <div class="absolute inset-[-10px] rounded-full bg-primary/5 blur-xl"></div>
+    <div class="absolute inset-0 rounded-full liquid-card"></div>
+    <!-- Active Data Ring -->
+    <div class="absolute inset-0 rounded-full speed-ring mix-blend-screen"></div>
+    <div class="absolute inset-1 rounded-full speed-ring-inner blur-[1px]"></div>
+    <!-- Inner Display -->
+    <div class="absolute inset-[1.5rem] rounded-full liquid-bubble flex flex-col items-center justify-center text-center" style="box-shadow: inset 0 4px 30px rgba(0,0,0,0.6);">
+      <div class="flex flex-col items-center justify-center mb-2">
+        <span class="font-label text-on-surface-variant/80 text-[0.625rem] uppercase tracking-[0.2em] mb-1">Download</span>
+        <div class="flex items-baseline gap-1.5 translate-x-2">
+          <span id="liveDownload" class="font-headline text-[2.5rem] leading-none text-primary font-black tracking-tighter drop-shadow-glow skeleton-pulse" style="min-width:3rem;display:inline-block;">--</span>
+          <span class="font-label text-on-surface-variant/90 text-sm font-medium tracking-wide">Mbps</span>
+        </div>
+      </div>
+      <div class="w-20 h-[2px] bg-gradient-to-r from-transparent via-primary/20 to-transparent my-3 rounded-full"></div>
+      <div class="flex flex-col items-center justify-center">
+        <span class="font-label text-tertiary/80 text-[0.55rem] uppercase tracking-[0.2em] mb-0.5">Upload</span>
+        <div class="flex items-baseline gap-1 translate-x-1">
+          <span id="liveUpload" class="font-headline text-xl leading-none text-tertiary font-bold tracking-tight drop-shadow-tertiary skeleton-pulse" style="min-width:2rem;display:inline-block;">--</span>
+          <span class="font-label text-on-surface-variant/90 text-xs font-medium tracking-wide">Mbps</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Data Usage Module -->
+  <div class="w-full max-w-sm liquid-card rounded-[2rem] px-6 py-5 flex items-center justify-between mb-8">
+    <div class="flex items-center gap-4">
+      <div class="w-12 h-12 rounded-full liquid-bubble flex items-center justify-center text-primary" style="box-shadow: inset 0 2px 10px rgba(0,223,193,0.1);">
+        <span class="material-symbols-outlined text-2xl">💧</span>
+      </div>
+      <div class="flex flex-col">
+        <span class="font-label text-[0.6875rem] text-on-surface-variant/90 uppercase tracking-widest font-semibold mb-0.5">Total Usage</span>
+        <span class="font-label text-xs text-on-surface-variant/70">Current Cycle</span>
+      </div>
+    </div>
+    <div class="flex items-baseline gap-1 text-right">
+      <span id="totalUsage" class="font-headline text-2xl text-on-surface font-extrabold tracking-tight">--</span>
+      <span class="font-label text-sm text-on-surface-variant/80 font-medium">GB</span>
+    </div>
+  </div>
+
+  <!-- Quick Stats Row -->
+  <div class="w-full max-w-sm grid grid-cols-2 gap-3 mb-8">
+    <div class="liquid-card rounded-2xl px-4 py-3 flex items-center gap-3">
+      <span class="material-symbols-outlined text-primary text-xl">⏱</span>
+      <div>
+        <span id="livePing" class="font-headline text-lg font-bold text-on-surface block">--</span>
+        <span class="font-label text-[0.55rem] text-on-surface-variant/60 uppercase tracking-wider">ms Ping</span>
+      </div>
+    </div>
+    <div class="liquid-card rounded-2xl px-4 py-3 flex items-center gap-3">
+      <span class="material-symbols-outlined text-tertiary text-xl">📶</span>
+      <div>
+        <span id="connectionType" class="font-headline text-sm font-bold text-on-surface block">--</span>
+        <span class="font-label text-[0.55rem] text-on-surface-variant/60 uppercase tracking-wider">Network</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Action Buttons -->
+  <div class="w-full max-w-sm flex flex-col gap-3 mt-auto mb-4">
+    <button onclick="navigateToTest()" class="w-full bg-gradient-to-r from-primary/80 to-tertiary/80 text-on-primary font-label text-sm font-bold uppercase tracking-widest py-4 rounded-full backdrop-blur-md pulse-glow flex items-center justify-center gap-2 border border-white/10 active:scale-[0.98] transition-all" style="box-shadow: 0 8px 32px rgba(0,223,193,0.2), inset 0 2px 0 rgba(255,255,255,0.3);">
+      <span class="material-symbols-outlined text-lg">📡</span>
+      Run Speed Test
+    </button>
+    <button onclick="navigateToHistory()" class="w-full liquid-card rounded-full py-3 flex items-center justify-center gap-2 text-sm font-label font-semibold text-on-surface-variant hover:text-primary transition-colors">
+      <span class="material-symbols-outlined text-lg">📋</span>
+      View Test History
+    </button>
+  </div>
+</main>
+
+<!-- BottomNavBar -->
+<nav class="fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-4 pb-6 pt-4 liquid-card border-t border-white/10 font-label text-[10px] font-semibold uppercase tracking-widest rounded-t-[2.5rem]">
+  <a class="flex flex-col items-center justify-center text-primary liquid-bubble rounded-2xl px-5 py-2" href="#" style="box-shadow: 0 4px 15px rgba(0,223,193,0.15);">
+    <span class="material-symbols-outlined mb-1 text-2xl">🏠</span> <span>Home</span>
+  </a>
+  <a class="flex flex-col items-center justify-center text-on-surface-variant/60 hover:text-primary transition-all px-4 py-1" href="area_test.html">
+    <span class="material-symbols-outlined mb-1 text-2xl">⚡</span> <span>Test</span>
+  </a>
+  <a class="flex flex-col items-center justify-center text-on-surface-variant/60 hover:text-primary transition-all px-4 py-1" href="history.html">
+    <span class="material-symbols-outlined mb-1 text-2xl">📋</span> <span>History</span>
+  </a>
+  <a class="flex flex-col items-center justify-center text-on-surface-variant/60 hover:text-primary transition-all px-4 py-1" href="settings.html">
+    <span class="material-symbols-outlined mb-1 text-2xl">⚙️</span> <span>Settings</span>
+  </a>
+</nav>
+
+<script>
+// ===== NAVIGATION WITH TRANSITIONS =====
+function navigateTo(url) {
+  document.body.classList.add('page-exit');
+  setTimeout(function() { window.location.href = url; }, 200);
+}
+
+function navigateToTest() { navigateTo('area_test.html'); }
+function navigateToHistory() { navigateTo('history.html'); }
+
+// ===== TOAST SYSTEM =====
+function showToast(message, type) {
+  type = type || 'info';
+  var existing = document.querySelector('.toast');
+  if (existing) { existing.remove(); }
+  var toast = document.createElement('div');
+  toast.className = 'toast ' + type;
+  toast.textContent = message;
+  document.body.appendChild(toast);
+  setTimeout(function() {
+    toast.classList.add('out');
+    setTimeout(function() { toast.remove(); }, 300);
+  }, 2500);
+}
+
+// ===== REMOVE SKELETON ON DATA =====
+function removeSkeleton(el) {
+  if (el) { el.classList.remove('skeleton-pulse'); }
+}
+
+// ===== LIVE SPEED UPDATES (from native bridge) =====
+window.onSpeedUpdate = function(speedJson) {
+  var s = typeof speedJson === 'string' ? JSON.parse(speedJson) : speedJson;
+  var dlEl = document.getElementById('liveDownload');
+  var ulEl = document.getElementById('liveUpload');
+  var pingEl = document.getElementById('livePing');
+
+  if (s.downloadSpeed !== undefined) {
+    removeSkeleton(dlEl);
+    dlEl.textContent = s.downloadSpeed > 0 ? s.downloadSpeed.toFixed(1) : '--';
+  }
+  if (s.uploadSpeed !== undefined) {
+    removeSkeleton(ulEl);
+    ulEl.textContent = s.uploadSpeed > 0 ? s.uploadSpeed.toFixed(1) : '--';
+  }
+  if (s.ping !== undefined && s.ping > 0) {
+    pingEl.textContent = s.ping;
+  }
+};
+
+// ===== DATA USAGE UPDATES =====
+window.onDataUsageUpdate = function(usageJson) {
+  var u = typeof usageJson === 'string' ? JSON.parse(usageJson) : usageJson;
+  var el = document.getElementById('totalUsage');
+  if (u.totalData !== undefined) {
+    removeSkeleton(el);
+    // totalData is in MB from DataUsageTracker
+    var mb = u.totalData;
+    el.textContent = mb >= 1024 ? (mb / 1024).toFixed(1) : mb.toFixed(1);
+    el.nextElementSibling.textContent = mb >= 1024 ? 'GB' : 'MB';
+  }
+};
+
+// Alias: bridge pushes to onDataUsageResult from getDataUsage()
+window.onDataUsageResult = window.onDataUsageUpdate;
+
+// ===== BACKEND READY =====
+window.backendReady = function() {
+  if (window.AndroidBridge) {
+    window.AndroidBridge.getCurrentSpeed();
+    window.AndroidBridge.getDataUsage();
+    window.AndroidBridge.getNetworkInfo();
+  }
+};
+
+// ===== NETWORK INFO =====
+window.onNetworkInfo = function(infoJson) {
+  var info = typeof infoJson === 'string' ? JSON.parse(infoJson) : infoJson;
+  document.getElementById('connectionType').textContent = info.connectionType || '--';
+};
+
+// ===== INIT: Request data from native =====
+document.addEventListener('DOMContentLoaded', function() {
+  if (window.AndroidBridge) {
+    window.AndroidBridge.getCurrentSpeed();
+    window.AndroidBridge.getDataUsage();
+    window.AndroidBridge.getNetworkInfo();
+  }
+  // Fallback: remove skeletons after timeout if no data arrives
+  setTimeout(function() {
+    removeSkeleton(document.getElementById('liveDownload'));
+    removeSkeleton(document.getElementById('liveUpload'));
+    removeSkeleton(document.getElementById('totalUsage'));
+  }, 5000);
+});
+</script>
+</body></html>

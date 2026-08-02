@@ -1,0 +1,42 @@
+[
+    {
+        "merged": "com.netspeedmeter.app-merged_res-42:/layout_overlay_speed.xml.flat",
+        "source": "com.netspeedmeter.app-main-44:/layout/overlay_speed.xml"
+    },
+    {
+        "merged": "com.netspeedmeter.app-merged_res-42:/mipmap-anydpi-v26_ic_launcher.xml.flat",
+        "source": "com.netspeedmeter.app-main-44:/mipmap-anydpi-v26/ic_launcher.xml"
+    },
+    {
+        "merged": "com.netspeedmeter.app-merged_res-42:/drawable_ic_launcher_foreground.xml.flat",
+        "source": "com.netspeedmeter.app-main-44:/drawable/ic_launcher_foreground.xml"
+    },
+    {
+        "merged": "com.netspeedmeter.app-merged_res-42:/layout_activity_main.xml.flat",
+        "source": "com.netspeedmeter.app-main-44:/layout/activity_main.xml"
+    },
+    {
+        "merged": "com.netspeedmeter.app-merged_res-42:/mipmap-anydpi-v26_ic_launcher_round.xml.flat",
+        "source": "com.netspeedmeter.app-main-44:/mipmap-anydpi-v26/ic_launcher_round.xml"
+    },
+    {
+        "merged": "com.netspeedmeter.app-merged_res-42:/drawable_ic_launcher_custom.png.flat",
+        "source": "com.netspeedmeter.app-main-44:/drawable/ic_launcher_custom.png"
+    },
+    {
+        "merged": "com.netspeedmeter.app-merged_res-42:/xml_file_paths.xml.flat",
+        "source": "com.netspeedmeter.app-main-44:/xml/file_paths.xml"
+    },
+    {
+        "merged": "com.netspeedmeter.app-merged_res-42:/mipmap-xxxhdpi_ic_launcher.png.flat",
+        "source": "com.netspeedmeter.app-main-44:/mipmap-xxxhdpi/ic_launcher.png"
+    },
+    {
+        "merged": "com.netspeedmeter.app-merged_res-42:/drawable_ic_speed.xml.flat",
+        "source": "com.netspeedmeter.app-main-44:/drawable/ic_speed.xml"
+    },
+    {
+        "merged": "com.netspeedmeter.app-merged_res-42:/drawable_overlay_background.xml.flat",
+        "source": "com.netspeedmeter.app-main-44:/drawable/overlay_background.xml"
+    }
+]

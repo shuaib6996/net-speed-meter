@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>NetSpeed Meter - Home</title>
+<!-- Google Fonts: Manrope (Headline) & Inter (Body/Label) -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Manrope:wght@400;500;600;700;800;900&amp;display=swap" rel="stylesheet"/>
+<!-- Material Symbols -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<!-- Tailwind Theme Configuration -->
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "tertiary": "#00daf8",
+                    "primary": "#00dfc1",
+                    "tertiary-fixed": "#a5eeff",
+                    "background": "#0a0c10",
+                    "inverse-primary": "#006b5b",
+                    "inverse-on-surface": "#2e303b",
+                    "surface-container-lowest": "#0c0e18",
+                    "on-error-container": "#ffdad6",
+                    "primary-fixed-dim": "#00dfc1",
+                    "on-tertiary-fixed": "#001f25",
+                    "outline-variant": "#414754",
+                    "surface-container-highest": "#32343f",
+                    "primary-container": "#00a38d",
+                    "on-secondary": "#00315f",
+                    "secondary-fixed-dim": "#a5c8ff",
+                    "on-tertiary-fixed-variant": "#004e5a",
+                    "secondary-fixed": "#d4e3ff",
+                    "on-primary-fixed-variant": "#005144",
+                    "error": "#ffb4ab",
+                    "surface-tint": "#00dfc1",
+                    "on-primary-container": "#003028",
+                    "on-secondary-fixed-variant": "#1e4879",
+                    "on-tertiary-container": "#002f37",
+                    "surface-container-low": "#191b26",
+                    "surface-variant": "#32343f",
+                    "surface-container": "#1d1f2a",
+                    "outline": "#8b90a0",
+                    "surface-dim": "#11131d",
+                    "on-tertiary": "#00363f",
+                    "error-container": "#93000a",
+                    "inverse-surface": "#e1e1f0",
+                    "secondary": "#a5c8ff",
+                    "surface-container-high": "#282934",
+                    "tertiary-container": "#009fb5",
+                    "on-primary-fixed": "#00201a",
+                    "on-surface": "#e1e1f0",
+                    "on-primary": "#00382f",
+                    "on-secondary-fixed": "#001c3a",
+                    "tertiary-fixed-dim": "#00daf8",
+                    "secondary-container": "#214a7c",
+                    "surface-bright": "#373844",
+                    "on-error": "#690005",
+                    "primary-fixed": "#26fedc",
+                    "on-background": "#e1e1f0",
+                    "surface": "#11131d",
+                    "on-surface-variant": "#c1c6d7",
+                    "on-secondary-container": "#95baf3"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "spacing": {},
+            "fontFamily": {
+                    "headline": [
+                            "Manrope"
+                    ],
+                    "body": [
+                            "Inter"
+                    ],
+                    "label": [
+                            "Inter"
+                    ]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+      background-color: #0a0c10;
+      background-image: radial-gradient(circle at 50% -20%, rgba(0,223,193,0.15), transparent 60%),
+                        radial-gradient(circle at 100% 100%, rgba(0,218,248,0.1), transparent 50%);
+    }
+    .liquid-card {
+        background: rgba(255, 255, 255, 0.03);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        border: 1px solid rgba(255, 255, 255, 0.05);
+        box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3), inset 0 1px 0 0 rgba(255, 255, 255, 0.1);
+    }
+    .liquid-bubble {
+        background: linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0) 100%);
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        box-shadow: inset 0 2px 10px rgba(255, 255, 255, 0.05), 0 4px 15px rgba(0, 0, 0, 0.2);
+    }
+  </style>
+</head>
+<body class="text-on-surface font-body h-screen w-full overflow-hidden flex flex-col relative antialiased selection:bg-primary-container selection:text-on-primary-container">
+<!-- Ambient Background Glows (The Kinetic Stream) -->
+<div class="absolute top-[-10%] left-[-10%] w-96 h-96 bg-primary/10 rounded-[40%_60%_70%_30%] blur-[80px] pointer-events-none animate-[spin_20s_linear_infinite]"></div>
+<div class="absolute bottom-[10%] right-[-10%] w-[30rem] h-[30rem] bg-tertiary/10 rounded-[60%_40%_30%_70%] blur-[100px] pointer-events-none animate-[spin_25s_linear_infinite_reverse]"></div>
+<div class="absolute top-[40%] right-[20%] w-[20rem] h-[20rem] bg-primary/5 rounded-[50%_50%_40%_60%] blur-[60px] pointer-events-none animate-[pulse_10s_ease-in-out_infinite]"></div>
+<!-- TopAppBar -->
+<header class="flex justify-between items-center w-full px-6 py-4 text-[#00dfc1] font-['Manrope'] font-bold tracking-tight z-40 bg-transparent">
+<div class="flex items-center gap-3 liquid-bubble px-4 py-2 rounded-2xl">
+<span class="material-symbols-outlined text-[#00dfc1]" style="font-variation-settings: 'FILL' 1;">speed</span>
+<span class="text-xl font-black tracking-tighter text-[#00dfc1]">NetSpeed Meter</span>
+</div>
+<div class="w-10 h-10 rounded-full flex items-center justify-center overflow-hidden liquid-bubble text-on-surface-variant">
+<span class="material-symbols-outlined text-xl">person</span>
+</div>
+</header>
+<!-- Main Content Canvas -->
+<main class="flex-1 overflow-y-auto pb-32 pt-8 flex flex-col items-center relative z-10 px-6">
+<!-- Central Circular Speed Meter -->
+<div class="relative w-[18rem] h-[18rem] md:w-[22rem] md:h-[22rem] flex items-center justify-center mt-4 mb-10 shrink-0">
+<!-- Outer Soft Glow -->
+<div class="absolute inset-[-10px] rounded-full bg-primary/5 blur-xl"></div>
+<!-- Liquid Container Base -->
+<div class="absolute inset-0 rounded-full liquid-card"></div>
+<!-- Active Data Ring (Liquid Flow Simulation) -->
+<div class="absolute inset-0 rounded-full border-[4px] border-transparent border-t-primary/80 border-r-primary/40 transform rotate-[45deg] drop-shadow-[0_0_20px_rgba(0,223,193,0.6)] mix-blend-screen"></div>
+<div class="absolute inset-1 rounded-full border-[2px] border-transparent border-b-tertiary/60 border-l-tertiary/30 transform rotate-[-30deg] blur-[1px]"></div>
+<!-- Inner Liquid Display -->
+<div class="absolute inset-[1.5rem] rounded-full liquid-bubble flex flex-col items-center justify-center text-center shadow-[inset_0_4px_30px_rgba(0,0,0,0.6)]">
+<!-- Download Readout -->
+<div class="flex flex-col items-center justify-center mb-2">
+<span class="font-label text-on-surface-variant/80 text-[0.625rem] uppercase tracking-[0.2em] mb-1">Download</span>
+<div class="flex items-baseline gap-1.5 translate-x-2">
+<span class="font-headline text-[3.5rem] leading-none text-primary font-black tracking-tighter drop-shadow-[0_0_15px_rgba(0,223,193,0.4)]">50</span>
+<span class="font-label text-on-surface-variant/90 text-sm font-medium tracking-wide">Mbps</span>
+</div>
+</div>
+<!-- Subtle Liquid Divider -->
+<div class="w-20 h-[2px] bg-gradient-to-r from-transparent via-primary/20 to-transparent my-3 rounded-full"></div>
+<!-- Upload Readout -->
+<div class="flex flex-col items-center justify-center">
+<span class="font-label text-tertiary/80 text-[0.55rem] uppercase tracking-[0.2em] mb-0.5">Upload</span>
+<div class="flex items-baseline gap-1 translate-x-1">
+<span class="font-headline text-2xl leading-none text-tertiary font-bold tracking-tight drop-shadow-[0_0_10px_rgba(0,218,248,0.3)]">10</span>
+<span class="font-label text-on-surface-variant/90 text-xs font-medium tracking-wide">Mbps</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Data Usage Module (Liquid Card) -->
+<div class="w-full max-w-sm liquid-card rounded-[2rem] px-6 py-5 flex items-center justify-between mb-8">
+<div class="flex items-center gap-4">
+<div class="w-12 h-12 rounded-full liquid-bubble flex items-center justify-center text-primary shadow-[inset_0_2px_10px_rgba(0,223,193,0.1)]">
+<span class="material-symbols-outlined text-2xl" style="font-variation-settings: 'FILL' 1;">water_drop</span>
+</div>
+<div class="flex flex-col">
+<span class="font-label text-[0.6875rem] text-on-surface-variant/90 uppercase tracking-widest font-semibold mb-0.5">Total Usage</span>
+<span class="font-label text-xs text-on-surface-variant/70">Current Cycle</span>
+</div>
+</div>
+<div class="flex items-baseline gap-1 text-right">
+<span class="font-headline text-2xl text-on-surface font-extrabold tracking-tight">1.2</span>
+<span class="font-label text-sm text-on-surface-variant/80 font-medium">GB</span>
+</div>
+</div>
+<!-- Action Button (Liquid Pill) -->
+<button class="w-full max-w-sm bg-gradient-to-r from-primary/80 to-tertiary/80 text-on-primary font-label text-sm font-bold uppercase tracking-widest py-4 rounded-full backdrop-blur-md shadow-[0_8px_32px_rgba(0,223,193,0.2),inset_0_2px_0_rgba(255,255,255,0.3)] hover:shadow-[0_12px_40px_rgba(0,223,193,0.4),inset_0_2px_0_rgba(255,255,255,0.4)] transition-all active:scale-[0.98] flex items-center justify-center gap-2 mt-auto mb-4 border border-white/10">
+<span class="material-symbols-outlined text-lg" style="font-variation-settings: 'FILL' 1;">radar</span>
+            Test Ping
+        </button>
+</main>
+<!-- BottomNavBar -->
+<nav class="fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-4 pb-6 pt-4 liquid-card border-t border-white/10 font-['Inter'] text-[10px] font-semibold uppercase tracking-widest rounded-t-[2.5rem] md:hidden">
+<!-- Home (Active) -->
+<a class="flex flex-col items-center justify-center text-[#00dfc1] liquid-bubble rounded-2xl px-5 py-2 transition-all scale-100 shadow-[0_4px_15px_rgba(0,223,193,0.15)]" href="#">
+<span class="material-symbols-outlined mb-1 text-2xl" style="font-variation-settings: 'FILL' 1;">home</span>
+<span class="mt-0.5">Home</span>
+</a>
+<!-- Test (Inactive) -->
+<a class="flex flex-col items-center justify-center text-on-surface-variant/60 hover:text-[#00dfc1] transition-all px-4 py-1" href="#">
+<span class="material-symbols-outlined mb-1 text-2xl">speed</span>
+<span class="mt-0.5">Test</span>
+</a>
+<!-- History (Inactive) -->
+<a class="flex flex-col items-center justify-center text-on-surface-variant/60 hover:text-[#00dfc1] transition-all px-4 py-1" href="#">
+<span class="material-symbols-outlined mb-1 text-2xl">history</span>
+<span class="mt-0.5">History</span>
+</a>
+<!-- Settings (Inactive) -->
+<a class="flex flex-col items-center justify-center text-on-surface-variant/60 hover:text-[#00dfc1] transition-all px-4 py-1" href="#">
+<span class="material-symbols-outlined mb-1 text-2xl">settings</span>
+<span class="mt-0.5">Settings</span>
+</a>
+</nav>
+</body></html>

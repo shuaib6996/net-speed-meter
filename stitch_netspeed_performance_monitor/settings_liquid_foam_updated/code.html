@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Settings</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;700;800&amp;family=Inter:wght@400;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "primary-fixed": "#26fedc",
+                        "on-background": "#e1e1f0",
+                        "on-secondary-container": "#95baf3",
+                        "on-surface-variant": "#c1c6d7",
+                        "surface": "#11131d",
+                        "on-surface": "#e1e1f0",
+                        "tertiary-container": "#009fb5",
+                        "surface-container-high": "#282934",
+                        "secondary": "#a5c8ff",
+                        "on-primary-fixed": "#00201a",
+                        "on-tertiary": "#00363f",
+                        "error-container": "#93000a",
+                        "inverse-surface": "#e1e1f0",
+                        "surface-bright": "#373844",
+                        "secondary-container": "#214a7c",
+                        "on-error": "#690005",
+                        "tertiary-fixed-dim": "#00daf8",
+                        "on-secondary-fixed": "#001c3a",
+                        "on-primary": "#00382f",
+                        "surface-tint": "#00dfc1",
+                        "on-primary-container": "#003028",
+                        "error": "#ffb4ab",
+                        "secondary-fixed": "#d4e3ff",
+                        "on-tertiary-fixed-variant": "#004e5a",
+                        "on-primary-fixed-variant": "#005144",
+                        "secondary-fixed-dim": "#a5c8ff",
+                        "outline": "#8b90a0",
+                        "surface-dim": "#11131d",
+                        "surface-variant": "#32343f",
+                        "surface-container": "#1d1f2a",
+                        "surface-container-low": "#191b26",
+                        "on-tertiary-container": "#002f37",
+                        "on-secondary-fixed-variant": "#1e4879",
+                        "inverse-primary": "#006b5b",
+                        "background": "#11131d",
+                        "tertiary-fixed": "#a5eeff",
+                        "primary": "#00dfc1",
+                        "tertiary": "#00daf8",
+                        "primary-container": "#00a38d",
+                        "on-secondary": "#00315f",
+                        "surface-container-highest": "#32343f",
+                        "outline-variant": "#414754",
+                        "primary-fixed-dim": "#00dfc1",
+                        "on-tertiary-fixed": "#001f25",
+                        "on-error-container": "#ffdad6",
+                        "surface-container-lowest": "#0c0e18",
+                        "inverse-on-surface": "#2e303b"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {},
+                    "fontFamily": {
+                        "headline": ["Manrope"],
+                        "body": ["Inter"],
+                        "label": ["Inter"]
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        body { font-family: 'Inter', sans-serif; }
+        h1, h2, h3, h4, h5, h6, .font-headline { font-family: 'Manrope', sans-serif; }
+        .glass-panel {
+            background-color: rgba(40, 41, 52, 0.4);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            border: 1px solid rgba(65, 71, 84, 0.15);
+        }
+        .liquid-bg {
+            position: fixed;
+            top: 0; left: 0; width: 100vw; height: 100vh;
+            z-index: -1;
+            background: radial-gradient(circle at 10% 20%, rgba(0, 223, 193, 0.05) 0%, transparent 40%),
+                        radial-gradient(circle at 90% 80%, rgba(0, 218, 248, 0.05) 0%, transparent 40%);
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-surface text-on-surface min-h-screen pb-24 md:pb-0 overflow-x-hidden antialiased">
+<div class="liquid-bg"></div>
+<!-- TopAppBar -->
+<header class="fixed top-0 w-full z-50 flex justify-between items-center px-6 py-4 max-w-7xl mx-auto bg-[#11131d]/60 backdrop-blur-[20px] shadow-[0px_30px_60px_rgba(12,14,24,0.08)] no-border tonal-shift-bg docked full-width top-0">
+<div class="flex items-center gap-4">
+<div class="w-10 h-10 rounded-full bg-surface-container-high overflow-hidden flex items-center justify-center">
+<span class="material-symbols-outlined text-on-surface">person</span>
+</div>
+<h1 class="font-manrope text-2xl font-black tracking-tighter text-[#00dfc1]">NetSpeed</h1>
+</div>
+<button class="w-10 h-10 flex items-center justify-center rounded-full hover:bg-[#282934]/50 transition-colors">
+<span class="material-symbols-outlined text-on-surface">settings_suggest</span>
+</button>
+</header>
+<!-- Main Content Canvas -->
+<main class="pt-24 px-6 max-w-3xl mx-auto pb-8 space-y-8">
+<header class="mb-8">
+<h2 class="font-headline text-3xl font-bold tracking-tight text-on-surface">Settings</h2>
+<p class="font-body text-on-surface-variant mt-2 text-sm">Configure your experience</p>
+</header>
+<!-- General Preferences -->
+<section class="space-y-4">
+<h3 class="font-body text-xs uppercase tracking-widest font-semibold text-primary pl-4">Preferences</h3>
+<div class="glass-panel rounded-xl overflow-hidden flex flex-col">
+<!-- Toggle Item 1 -->
+<div class="p-5 flex items-center justify-between group hover:bg-surface-container-high/30 transition-colors">
+<div class="flex items-center gap-4">
+<div class="w-10 h-10 rounded-lg bg-surface-container flex items-center justify-center text-primary">
+<span class="material-symbols-outlined">dark_mode</span>
+</div>
+<div>
+<p class="font-body text-base font-semibold text-on-surface">Dark Mode</p>
+<p class="font-body text-xs text-on-surface-variant mt-0.5">Use dark theme across the app</p>
+</div>
+</div>
+<label class="relative inline-flex items-center cursor-pointer">
+<input checked="" class="sr-only peer" type="checkbox" value=""/>
+<div class="w-11 h-6 bg-surface-container-highest peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-on-primary after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary shadow-[0_0_15px_rgba(0,223,193,0.3)]"></div>
+</label>
+</div>
+<!-- Toggle Item 2 -->
+<div class="p-5 flex items-center justify-between group hover:bg-surface-container-high/30 transition-colors">
+<div class="flex items-center gap-4">
+<div class="w-10 h-10 rounded-lg bg-surface-container flex items-center justify-center text-tertiary">
+<span class="material-symbols-outlined">memory</span>
+</div>
+<div>
+<p class="font-body text-base font-semibold text-on-surface">Background Service</p>
+<p class="font-body text-xs text-on-surface-variant mt-0.5">Keep monitoring while app is closed</p>
+</div>
+</div>
+<label class="relative inline-flex items-center cursor-pointer">
+<input checked="" class="sr-only peer" type="checkbox" value=""/>
+<div class="w-11 h-6 bg-surface-container-highest peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-on-primary after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary shadow-[0_0_15px_rgba(0,223,193,0.3)]"></div>
+</label>
+</div>
+<!-- Toggle Item 3 -->
+<div class="p-5 flex items-center justify-between group hover:bg-surface-container-high/30 transition-colors">
+<div class="flex items-center gap-4">
+<div class="w-10 h-10 rounded-lg bg-surface-container flex items-center justify-center text-secondary">
+<span class="material-symbols-outlined">layers</span>
+</div>
+<div>
+<p class="font-body text-base font-semibold text-on-surface">Floating Overlay</p>
+<p class="font-body text-xs text-on-surface-variant mt-0.5">Show speed meter on top of other apps</p>
+</div>
+</div>
+<label class="relative inline-flex items-center cursor-pointer">
+<input class="sr-only peer" type="checkbox" value=""/>
+<div class="w-11 h-6 bg-surface-container-highest peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-on-surface-variant after:border-transparent after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+</label>
+</div>
+</div>
+</section>
+<!-- Information -->
+<section class="space-y-4">
+<h3 class="font-body text-xs uppercase tracking-widest font-semibold text-primary pl-4">Information</h3>
+<div class="glass-panel rounded-xl overflow-hidden flex flex-col">
+<a class="p-5 flex items-center justify-between group hover:bg-surface-container-high/30 transition-colors" href="#">
+<div class="flex items-center gap-4">
+<div class="w-10 h-10 rounded-lg bg-surface-container flex items-center justify-center text-on-surface-variant group-hover:text-primary transition-colors">
+<span class="material-symbols-outlined">info</span>
+</div>
+<p class="font-body text-base font-semibold text-on-surface">About</p>
+</div>
+<span class="material-symbols-outlined text-on-surface-variant group-hover:text-primary transition-colors">chevron_right</span>
+</a>
+<a class="p-5 flex items-center justify-between group hover:bg-surface-container-high/30 transition-colors" href="#">
+<div class="flex items-center gap-4">
+<div class="w-10 h-10 rounded-lg bg-surface-container flex items-center justify-center text-on-surface-variant group-hover:text-primary transition-colors">
+<span class="material-symbols-outlined">policy</span>
+</div>
+<p class="font-body text-base font-semibold text-on-surface">Privacy Policy</p>
+</div>
+<span class="material-symbols-outlined text-on-surface-variant group-hover:text-primary transition-colors">chevron_right</span>
+</a>
+</div>
+</section>
+</main>
+<!-- BottomNavBar -->
+<nav class="md:hidden fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-4 pb-6 pt-2 bg-[#282934]/80 backdrop-blur-[20px] shadow-[0px_-20px_40px_rgba(12,14,24,0.1)] no-border background-layering docked full-width bottom-0 rounded-t-[1.5rem]">
+<a class="flex flex-col items-center justify-center text-[#e1e1f0]/50 px-5 py-2 hover:text-[#00dfc1] transition-all duration-300 tap-highlight-none active:scale-90" href="#">
+<span class="material-symbols-outlined mb-1" data-weight="fill">home_max</span>
+<span class="font-inter text-[10px] uppercase tracking-widest font-semibold">Home</span>
+</a>
+<a class="flex flex-col items-center justify-center text-[#e1e1f0]/50 px-5 py-2 hover:text-[#00dfc1] transition-all duration-300 tap-highlight-none active:scale-90" href="#">
+<span class="material-symbols-outlined mb-1">speed</span>
+<span class="font-inter text-[10px] uppercase tracking-widest font-semibold">Test</span>
+</a>
+<a class="flex flex-col items-center justify-center text-[#e1e1f0]/50 px-5 py-2 hover:text-[#00dfc1] transition-all duration-300 tap-highlight-none active:scale-90" href="#">
+<span class="material-symbols-outlined mb-1">history</span>
+<span class="font-inter text-[10px] uppercase tracking-widest font-semibold">History</span>
+</a>
+<a class="flex flex-col items-center justify-center bg-[#00dfc1]/15 text-[#00dfc1] rounded-[1rem] px-5 py-2 hover:text-[#00dfc1] transition-all duration-300 tap-highlight-none active:scale-90" href="#">
+<span class="material-symbols-outlined mb-1" style="font-variation-settings: 'FILL' 1;">settings</span>
+<span class="font-inter text-[10px] uppercase tracking-widest font-semibold">Settings</span>
+</a>
+</nav>
+</body></html>

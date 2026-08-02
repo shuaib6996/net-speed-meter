@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NetSpeed Meter - Local Host</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #02050a, #08121a);
+            color: #ffffff;
+            margin: 0;
+            padding: 20px;
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 30px;
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
+        h1 {
+            color: #00dfc1;
+            text-align: center;
+            margin-bottom: 10px;
+        }
+        .subtitle {
+            text-align: center;
+            color: #b0bec5;
+            margin-bottom: 30px;
+        }
+        .server-info {
+            background: rgba(0, 223, 193, 0.1);
+            border-left: 4px solid #00dfc1;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+        }
+        .url {
+            font-family: monospace;
+            background: rgba(0, 0, 0, 0.3);
+            padding: 10px 15px;
+            border-radius: 6px;
+            display: inline-block;
+            margin: 10px 0;
+            color: #00dfc1;
+        }
+        .card-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 20px;
+            margin-top: 30px;
+        }
+        .card {
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 15px;
+            padding: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: transform 0.3s, background 0.3s;
+            text-decoration: none;
+            color: inherit;
+        }
+        .card:hover {
+            transform: translateY(-5px);
+            background: rgba(255, 255, 255, 0.07);
+            border-color: rgba(0, 223, 193, 0.3);
+        }
+        .card h3 {
+            color: #00dfc1;
+            margin-top: 0;
+        }
+        .card p {
+            color: #b0bec5;
+            font-size: 14px;
+        }
+        .status {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        .status-running {
+            background: rgba(0, 223, 193, 0.2);
+            color: #00dfc1;
+        }
+        .note {
+            background: rgba(255, 193, 7, 0.1);
+            border-left: 4px solid #ffc107;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 30px;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>NetSpeed Meter - Local Host</h1>
+        <div class="subtitle">Android Network Monitoring Backend with HTML Frontend</div>
+        
+        <div class="server-info">
+            <h3>✅ Local HTTP Server Running</h3>
+            <p>Server is successfully running on:</p>
+            <div class="url">http://localhost:8080</div>
+            <p>Port: 8080 | Status: <span class="status status-running">ACTIVE</span></p>
+        </div>
+        
+        <h2>Available Pages</h2>
+        <div class="card-grid">
+            <a href="/stitch_netspeed_performance_monitor/app/src/main/assets/home.html" class="card">
+                <h3>🏠 Home Dashboard</h3>
+                <p>Main dashboard showing real-time network speeds, data usage, and quick controls.</p>
+            </a>
+            
+            <a href="/stitch_netspeed_performance_monitor/app/src/main/assets/area_test.html" class="card">
+                <h3>📊 Area Speed Test</h3>
+                <p>Run comprehensive download/upload speed tests with ping measurement.</p>
+            </a>
+            
+            <a href="/stitch_netspeed_performance_monitor/app/src/main/assets/history.html" class="card">
+                <h3>📈 History & Analytics</h3>
+                <p>View historical speed logs, data usage trends, and test history.</p>
+            </a>
+            
+            <a href="/stitch_netspeed_performance_monitor/app/src/main/assets/settings.html" class="card">
+                <h3>⚙️ Settings</h3>
+                <p>Configure overlay, service, battery optimization, and app preferences.</p>
+            </a>
+            
+            <a href="/stitch_netspeed_performance_monitor/area_test_liquid_foam/code.html" class="card">
+                <h3>🎨 Design Preview</h3>
+                <p>Original area test design with liquid foam visual effects.</p>
+            </a>
+            
+            <a href="/stitch_netspeed_performance_monitor/home_page_liquid_foam/code.html" class="card">
+                <h3>🎨 Home Design</h3>
+                <p>Original home page design with liquid bubble animations.</p>
+            </a>
+        </div>
+        
+        <div class="note">
+            <strong>Note:</strong> This is a static preview of the HTML frontend. The full Android backend functionality (real-time monitoring, foreground service, overlay, database, etc.) requires building and running the Android app on an emulator or device. The backend implementation is complete in the <code>app/</code> directory.
+        </div>
+        
+        <h2>Project Structure</h2>
+        <ul>
+            <li><strong>Android Backend:</strong> Complete Kotlin implementation with Foreground Service, Room Database, Overlay System, Speed Test Engine, etc.</li>
+            <li><strong>HTML Frontend:</strong> Pre-designed UI pages (home.html, area_test.html, history.html, settings.html)</li>
+            <li><strong>JavaScript Bridge:</strong> WebView communication between native Android and web UI</li>
+            <li><strong>Gradle Build:</strong> Fully configured Android project with all dependencies</li>
+        </ul>
+    </div>
+</body>
+</html>

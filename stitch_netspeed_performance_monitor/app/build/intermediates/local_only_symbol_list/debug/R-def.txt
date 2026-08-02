@@ -1,0 +1,31 @@
+R_DEF: Internal format may change without notice
+local
+color background
+color colorAccent
+color colorPrimary
+color colorPrimaryDark
+color ic_launcher_background
+color notification_color
+color on_primary
+color on_secondary
+color primary
+color primary_container
+color secondary
+color secondary_container
+color surface
+color textPrimary
+color textSecondary
+drawable ic_launcher_custom
+drawable ic_launcher_foreground
+drawable ic_speed
+drawable overlay_background
+id overlay_unit
+id overlay_value
+id webView
+layout activity_main
+layout overlay_speed
+mipmap ic_launcher
+mipmap ic_launcher_round
+string app_name
+style Theme.NetSpeedMeter
+xml file_paths

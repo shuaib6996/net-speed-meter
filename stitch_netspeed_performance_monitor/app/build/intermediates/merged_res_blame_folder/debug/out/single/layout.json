@@ -1,0 +1,10 @@
+[
+    {
+        "merged": "com.netspeedmeter.app-mergeDebugResources-41:/layout/overlay_speed.xml",
+        "source": "com.netspeedmeter.app-main-44:/layout/overlay_speed.xml"
+    },
+    {
+        "merged": "com.netspeedmeter.app-mergeDebugResources-41:/layout/activity_main.xml",
+        "source": "com.netspeedmeter.app-main-44:/layout/activity_main.xml"
+    }
+]

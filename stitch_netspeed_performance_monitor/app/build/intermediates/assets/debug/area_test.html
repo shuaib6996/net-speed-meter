@@ -1,0 +1,666 @@
+<!DOCTYPE html>
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" name="viewport"/>
+<title>NetSpeed Meter - Speed Test</title>
+<link rel="stylesheet" href="styles.css"/>
+<style>
+  body {
+    background-image: radial-gradient(circle at 50% -20%, rgba(0,223,193,0.12), transparent 60%),
+                      radial-gradient(circle at 100% 100%, rgba(0,218,248,0.08), transparent 50%);
+  }
+  #speedGraph { image-rendering: auto; }
+</style>
+</head>
+<body class="text-on-surface font-body h-screen w-full overflow-hidden flex flex-col relative antialiased page-enter">
+
+<!-- Ambient Background -->
+<div class="absolute top-[-10%] left-[-10%] w-96 h-96 bg-primary/5 rounded-[40%_60%_70%_30%] blur-xl pointer-events-none animate-spin"></div>
+<div class="absolute bottom-[10%] right-[-10%] w-[30rem] h-[30rem] bg-tertiary/5 rounded-[60%_40%_30%_70%] blur-xl pointer-events-none animate-spin-reverse"></div>
+
+<!-- TopAppBar -->
+<header class="flex justify-between items-center w-full px-6 py-4 text-primary font-headline font-bold tracking-tight z-40 shrink-0">
+  <div class="flex items-center gap-3 liquid-bubble px-4 py-2 rounded-2xl">
+    <span class="material-symbols-outlined text-primary text-xl">⚡</span>
+    <span class="text-xl font-black tracking-tighter text-primary">Speed Test</span>
+  </div>
+  <button onclick="cancelTest()" id="btnCancel" class="hidden w-10 h-10 rounded-full flex items-center justify-center liquid-bubble text-error">
+    <span class="material-symbols-outlined text-xl">✕</span>
+  </button>
+</header>
+
+<!-- Main Content -->
+<main class="flex-1 overflow-y-auto pb-32 flex flex-col items-center relative z-10 px-4">
+
+  <!-- ===== SVG ANIMATED SPEEDOMETER ===== -->
+  <div id="gaugeSection" class="relative w-[240px] h-[240px] flex items-center justify-center mt-2 mb-4 shrink-0">
+    <div class="absolute inset-[-8px] rounded-full bg-primary/5 blur-xl"></div>
+    <div class="absolute inset-0 rounded-full liquid-card"></div>
+    <svg viewBox="0 0 280 280" class="absolute inset-0 w-full h-full">
+      <defs>
+        <linearGradient id="arcGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+          <stop offset="0%" stop-color="#00dfc1" stop-opacity="0.3"/>
+          <stop offset="50%" stop-color="#00dfc1" stop-opacity="0.8"/>
+          <stop offset="100%" stop-color="#00daf8" stop-opacity="0.3"/>
+        </linearGradient>
+        <filter id="glow">
+          <feGaussianBlur stdDeviation="3" result="blur"/>
+          <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+        </filter>
+      </defs>
+
+      <!-- Arc background -->
+      <path d="M 50 220 A 110 110 0 0 1 230 220" fill="none" stroke="rgba(225,225,240,0.08)" stroke-width="12" stroke-linecap="round"/>
+
+      <!-- Active arc (animated) -->
+      <path id="activeArc" d="M 50 220 A 110 110 0 0 1 140 110" fill="none" stroke="url(#arcGradient)" stroke-width="12" stroke-linecap="round" filter="url(#glow)" stroke-dasharray="0 400" style="transition: stroke-dasharray 0.3s ease-out;"/>
+
+      <!-- Tick marks -->
+      <g id="tickMarks"></g>
+
+      <!-- Speed labels -->
+      <text x="60" y="235" class="tick-label">0</text>
+      <text x="140" y="100" class="tick-label" fill="rgba(225,225,240,0.7)">100</text>
+      <text x="220" y="235" class="tick-label">200+</text>
+
+      <!-- Needle -->
+      <g id="needleGroup" class="gauge-needle" style="transform: rotate(-90deg);">
+        <line x1="140" y1="140" x2="140" y2="55" stroke="#00dfc1" stroke-width="2.5" stroke-linecap="round" filter="url(#glow)"/>
+        <circle cx="140" cy="140" r="8" fill="#0a0c10" stroke="#00dfc1" stroke-width="2"/>
+        <circle cx="140" cy="140" r="3" fill="#00dfc1"/>
+      </g>
+    </svg>
+
+    <!-- Center readout overlay -->
+    <div class="absolute inset-[3rem] rounded-full liquid-bubble flex flex-col items-center justify-center text-center pointer-events-none">
+      <span id="stageLabel" class="font-label text-[0.55rem] uppercase tracking-[0.25em] text-on-surface-variant/70 mb-1">Ready</span>
+      <div class="flex items-baseline gap-1">
+        <span id="speedValue" class="font-headline text-[2.5rem] leading-none text-primary font-black tracking-tighter drop-shadow-glow">--</span>
+      </div>
+      <span id="speedUnit" class="font-label text-xs text-on-surface-variant/80 font-medium tracking-wide mt-0.5">Mbps</span>
+    </div>
+  </div>
+
+  <!-- ===== STAGE INDICATORS ===== -->
+  <div id="stageIndicators" class="flex items-center gap-3 mb-5">
+    <div class="flex items-center gap-2">
+      <div id="dotPing" class="stage-dot w-3 h-3 rounded-full bg-on-surface-variant/30"></div>
+      <span class="font-label text-[0.6rem] uppercase tracking-widest text-on-surface-variant/60">Ping</span>
+    </div>
+    <div class="w-6 h-[1px] bg-on-surface-variant/20"></div>
+    <div class="flex items-center gap-2">
+      <div id="dotDownload" class="stage-dot w-3 h-3 rounded-full bg-on-surface-variant/30"></div>
+      <span class="font-label text-[0.6rem] uppercase tracking-widest text-on-surface-variant/60">Download</span>
+    </div>
+    <div class="w-6 h-[1px] bg-on-surface-variant/20"></div>
+    <div class="flex items-center gap-2">
+      <div id="dotUpload" class="stage-dot w-3 h-3 rounded-full bg-on-surface-variant/30"></div>
+      <span class="font-label text-[0.6rem] uppercase tracking-widest text-on-surface-variant/60">Upload</span>
+    </div>
+  </div>
+
+  <!-- ===== CANVAS REAL-TIME SPEED GRAPH ===== -->
+  <div id="graphContainer" class="w-full max-w-sm liquid-card rounded-2xl p-4 mb-5 hidden">
+    <div class="flex items-center justify-between mb-2">
+      <span class="font-label text-[0.6rem] uppercase tracking-widest text-on-surface-variant/60">Real-time Speed</span>
+      <span id="graphLabel" class="font-label text-[0.55rem] text-primary/70">Mbps</span>
+    </div>
+    <canvas id="speedGraph" width="320" height="120" class="w-full h-[120px] rounded-lg"></canvas>
+  </div>
+
+  <!-- ===== NETWORK INFO PANEL ===== -->
+  <div id="networkInfoPanel" class="w-full max-w-sm liquid-card rounded-2xl px-5 py-4 mb-5 hidden fade-in">
+    <div class="flex items-center gap-3 mb-3">
+      <span id="networkIcon" class="material-symbols-outlined text-primary text-xl">📶</span>
+      <span class="font-label text-[0.65rem] uppercase tracking-widest text-on-surface-variant/70">Connection Info</span>
+    </div>
+    <div class="grid grid-cols-2 gap-3">
+      <div>
+        <span class="font-label text-[0.55rem] uppercase tracking-wider text-on-surface-variant/50">ISP</span>
+        <p id="infoIsp" class="font-body text-sm text-on-surface font-medium mt-0.5">--</p>
+      </div>
+      <div>
+        <span class="font-label text-[0.55rem] uppercase tracking-wider text-on-surface-variant/50">Connection</span>
+        <p id="infoConnection" class="font-body text-sm text-on-surface font-medium mt-0.5">--</p>
+      </div>
+      <div class="col-span-2">
+        <span class="font-label text-[0.55rem] uppercase tracking-wider text-on-surface-variant/50">Server Location</span>
+        <p id="infoLocation" class="font-body text-sm text-on-surface font-medium mt-0.5">--</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== RESULTS CARD (shown after test) ===== -->
+  <div id="resultsCard" class="w-full max-w-sm liquid-card rounded-2xl p-5 mb-5 hidden">
+    <div class="flex items-center justify-between mb-4">
+      <span class="font-headline text-lg font-bold text-on-surface">Test Results</span>
+      <span id="resultGrade" class="font-label text-xs font-bold uppercase tracking-wider px-3 py-1 rounded-full">--</span>
+    </div>
+    <div class="grid grid-cols-2 gap-4">
+      <div class="liquid-bubble rounded-xl p-3 text-center">
+        <span class="material-symbols-outlined text-primary text-sm block mb-1">⬇</span>
+        <span id="resDownload" class="font-headline text-xl font-bold text-primary block">--</span>
+        <span class="font-label text-[0.55rem] text-on-surface-variant/60">Mbps Down</span>
+      </div>
+      <div class="liquid-bubble rounded-xl p-3 text-center">
+        <span class="material-symbols-outlined text-tertiary text-sm block mb-1">⬆</span>
+        <span id="resUpload" class="font-headline text-xl font-bold text-tertiary block">--</span>
+        <span class="font-label text-[0.55rem] text-on-surface-variant/60">Mbps Up</span>
+      </div>
+      <div class="liquid-bubble rounded-xl p-3 text-center">
+        <span class="material-symbols-outlined text-on-surface-variant/70 text-sm block mb-1">⏱</span>
+        <span id="resPing" class="font-headline text-lg font-bold text-on-surface block">--</span>
+        <span class="font-label text-[0.55rem] text-on-surface-variant/60">ms Ping</span>
+      </div>
+      <div class="liquid-bubble rounded-xl p-3 text-center">
+        <span class="material-symbols-outlined text-on-surface-variant/70 text-sm block mb-1">📊</span>
+        <span id="resJitter" class="font-headline text-lg font-bold text-on-surface block">--</span>
+        <span class="font-label text-[0.55rem] text-on-surface-variant/60">ms Jitter</span>
+      </div>
+    </div>
+    <div class="flex gap-3 mt-4">
+      <button onclick="shareResult()" class="flex-1 liquid-bubble rounded-xl py-3 flex items-center justify-center gap-2 text-sm font-label font-semibold text-on-surface hover:text-primary transition-colors">
+        <span class="material-symbols-outlined text-lg">📤</span> Share
+      </button>
+      <button onclick="retryTest()" class="flex-1 bg-primary/20 rounded-xl py-3 flex items-center justify-center gap-2 text-sm font-label font-semibold text-primary hover:bg-primary/30 transition-colors">
+        <span class="material-symbols-outlined text-lg">🔄</span> Retry
+      </button>
+    </div>
+  </div>
+
+  <!-- ===== SERVER SELECTION ===== -->
+  <div id="serverSelector" class="w-full max-w-sm mb-4">
+    <div class="flex items-center gap-2 mb-2">
+      <span class="material-symbols-outlined text-on-surface-variant/60 text-sm">🖥</span>
+      <span class="font-label text-[0.6rem] uppercase tracking-widest text-on-surface-variant/60">Test Server</span>
+    </div>
+    <div id="serverChips" class="flex flex-wrap gap-2">
+      <!-- Populated by JS -->
+    </div>
+  </div>
+
+  <!-- ===== ERROR BANNER ===== -->
+  <div id="errorBanner" class="w-full max-w-sm liquid-card rounded-xl px-4 py-3 mb-4 hidden fade-in border border-error/30 bg-error/5">
+    <div class="flex items-center gap-2">
+      <span class="material-symbols-outlined text-error text-lg">⚠️</span>
+      <span id="errorMessage" class="font-body text-sm text-error/90"></span>
+    </div>
+  </div>
+
+  <!-- ===== START BUTTON ===== -->
+  <button id="btnStart" onclick="startTest()" class="w-full max-w-sm bg-gradient-to-r from-primary/80 to-tertiary/80 text-on-primary font-label text-sm font-bold uppercase tracking-widest py-4 rounded-full backdrop-blur-md flex items-center justify-center gap-2 mt-auto mb-4 border border-white/10 active:scale-[0.98] transition-all" style="box-shadow: 0 8px 32px rgba(0,223,193,0.2), inset 0 2px 0 rgba(255,255,255,0.3);">
+    <span class="material-symbols-outlined text-lg">📡</span>
+    Start Test
+  </button>
+</main>
+
+<!-- BottomNavBar -->
+<nav class="fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-4 pb-6 pt-4 liquid-card border-t border-white/10 font-label text-[10px] font-semibold uppercase tracking-widest rounded-t-[2.5rem]">
+  <a class="flex flex-col items-center justify-center text-on-surface-variant/60 hover:text-primary transition-all px-4 py-1" href="home.html">
+    <span class="material-symbols-outlined mb-1 text-2xl">🏠</span> <span>Home</span>
+  </a>
+  <a class="flex flex-col items-center justify-center text-primary liquid-bubble rounded-2xl px-5 py-2" href="#" style="box-shadow: 0 4px 15px rgba(0,223,193,0.15);">
+    <span class="material-symbols-outlined mb-1 text-2xl">⚡</span> <span>Test</span>
+  </a>
+  <a class="flex flex-col items-center justify-center text-on-surface-variant/60 hover:text-primary transition-all px-4 py-1" href="history.html">
+    <span class="material-symbols-outlined mb-1 text-2xl">📋</span> <span>History</span>
+  </a>
+  <a class="flex flex-col items-center justify-center text-on-surface-variant/60 hover:text-primary transition-all px-4 py-1" href="settings.html">
+    <span class="material-symbols-outlined mb-1 text-2xl">⚙️</span> <span>Settings</span>
+  </a>
+</nav>
+
+<script>
+// ===== STATE =====
+let testRunning = false;
+let lastResult = null;
+let graphData = [];
+let selectedServerId = 'cloudflare';
+const MAX_GRAPH_POINTS = 80;
+
+// ===== DOM REFS =====
+const needleGroup = document.getElementById('needleGroup');
+const activeArc = document.getElementById('activeArc');
+const speedValue = document.getElementById('speedValue');
+const speedUnit = document.getElementById('speedUnit');
+const stageLabel = document.getElementById('stageLabel');
+const btnStart = document.getElementById('btnStart');
+const btnCancel = document.getElementById('btnCancel');
+const graphContainer = document.getElementById('graphContainer');
+const speedGraph = document.getElementById('speedGraph');
+const graphLabel = document.getElementById('graphLabel');
+const networkInfoPanel = document.getElementById('networkInfoPanel');
+const resultsCard = document.getElementById('resultsCard');
+const tickMarks = document.getElementById('tickMarks');
+const serverChips = document.getElementById('serverChips');
+const errorBanner = document.getElementById('errorBanner');
+const errorMessage = document.getElementById('errorMessage');
+const serverSelector = document.getElementById('serverSelector');
+
+// ===== INIT TICK MARKS =====
+(function initTicks() {
+  let html = '';
+  for (let i = 0; i <= 200; i += 20) {
+    const angle = -90 + (i / 200) * 180;
+    const rad = angle * Math.PI / 180;
+    const innerR = 100, outerR = 112;
+    const x1 = 140 + innerR * Math.cos(rad);
+    const y1 = 140 + innerR * Math.sin(rad);
+    const x2 = 140 + outerR * Math.cos(rad);
+    const y2 = 140 + outerR * Math.sin(rad);
+    const isMajor = i % 50 === 0;
+    html += '<line x1="'+x1+'" y1="'+y1+'" x2="'+x2+'" y2="'+y2+'" class="tick-mark'+(isMajor?' major':'')+'"/>';
+  }
+  tickMarks.innerHTML = html;
+})();
+
+// ===== SERVER SELECTION =====
+var DEFAULT_SERVERS = [
+  { id: 'cloudflare', name: 'Cloudflare', location: 'Global CDN' },
+  { id: 'google', name: 'Google', location: 'Global' },
+  { id: 'netflix', name: 'Netflix', location: 'Global' },
+  { id: 'azure', name: 'Azure', location: 'Global' }
+];
+
+function initServerChips(servers) {
+  serverChips.innerHTML = servers.map(function(s) {
+    var isActive = s.id === selectedServerId;
+    return '<button onclick="selectServer(\''+s.id+'\')" id="chip-'+s.id+'" class="server-chip liquid-bubble rounded-full px-3 py-1.5 font-label text-[0.6rem] font-semibold uppercase tracking-wider transition-all '+(isActive?'text-primary border-primary/40 bg-primary/10':'text-on-surface-variant/60 border-white/5')+'">'+s.name+'</button>';
+  }).join('');
+}
+
+function selectServer(serverId) {
+  selectedServerId = serverId;
+  var chips = document.querySelectorAll('.server-chip');
+  for (var i = 0; i < chips.length; i++) {
+    chips[i].classList.remove('text-primary', 'border-primary/40', 'bg-primary/10');
+    chips[i].classList.add('text-on-surface-variant/60', 'border-white/5');
+  }
+  var activeChip = document.getElementById('chip-' + serverId);
+  if (activeChip) {
+    activeChip.classList.remove('text-on-surface-variant/60', 'border-white/5');
+    activeChip.classList.add('text-primary', 'border-primary/40', 'bg-primary/10');
+  }
+  if (window.AndroidBridge) {
+    window.AndroidBridge.selectServer(serverId);
+  }
+}
+
+initServerChips(DEFAULT_SERVERS);
+
+// ===== ERROR HANDLING =====
+function showError(msg) {
+  errorMessage.textContent = msg;
+  errorBanner.classList.remove('hidden');
+  errorBanner.classList.add('fade-in');
+  setTimeout(function() {
+    errorBanner.classList.add('hidden');
+    errorBanner.classList.remove('fade-in');
+  }, 5000);
+}
+
+// ===== SERVER CALLBACKS (from native) =====
+window.onServerList = function(serversJson) {
+  var servers = typeof serversJson === 'string' ? JSON.parse(serversJson) : serversJson;
+  if (servers && servers.length > 0) {
+    initServerChips(servers);
+  }
+};
+
+window.onSelectedServer = function(serverJson) {
+  var server = typeof serverJson === 'string' ? JSON.parse(serverJson) : serverJson;
+  if (server && server.id) {
+    selectedServerId = server.id;
+    initServerChips(DEFAULT_SERVERS);
+  }
+};
+
+// ===== GAUGE HELPERS =====
+function setGauge(speedMbps, maxSpeed) {
+  maxSpeed = maxSpeed || 200;
+  var fraction = Math.min(speedMbps / maxSpeed, 1);
+  var angle = -90 + fraction * 180;
+  needleGroup.style.transform = 'rotate('+angle+'deg)';
+  var arcLength = fraction * 345;
+  activeArc.setAttribute('stroke-dasharray', arcLength+' 400');
+}
+
+function resetGauge() {
+  needleGroup.style.transform = 'rotate(-90deg)';
+  activeArc.setAttribute('stroke-dasharray', '0 400');
+  speedValue.textContent = '--';
+  speedUnit.textContent = 'Mbps';
+  stageLabel.textContent = 'Ready';
+}
+
+// ===== CANVAS GRAPH =====
+function initGraph() {
+  graphData = [];
+  drawGraph();
+}
+
+function addGraphPoint(speed) {
+  graphData.push(speed);
+  if (graphData.length > MAX_GRAPH_POINTS) graphData.shift();
+  drawGraph();
+}
+
+function drawGraph() {
+  var canvas = speedGraph;
+  var ctx = canvas.getContext('2d');
+  var w = canvas.width, h = canvas.height;
+  ctx.clearRect(0, 0, w, h);
+  if (graphData.length < 2) return;
+
+  var maxVal = Math.max.apply(null, graphData.concat([1]));
+  var padding = { top: 10, right: 10, bottom: 20, left: 10 };
+  var plotW = w - padding.left - padding.right;
+  var plotH = h - padding.top - padding.bottom;
+
+  // Grid lines
+  ctx.strokeStyle = 'rgba(225,225,240,0.06)';
+  ctx.lineWidth = 1;
+  for (var i = 0; i <= 4; i++) {
+    var gy = padding.top + (plotH / 4) * i;
+    ctx.beginPath(); ctx.moveTo(padding.left, gy); ctx.lineTo(w - padding.right, gy); ctx.stroke();
+  }
+
+  // Gradient fill
+  var grad = ctx.createLinearGradient(0, padding.top, 0, h - padding.bottom);
+  grad.addColorStop(0, 'rgba(0,223,193,0.25)');
+  grad.addColorStop(1, 'rgba(0,223,193,0.02)');
+
+  // Draw area
+  ctx.beginPath();
+  ctx.moveTo(padding.left, h - padding.bottom);
+  for (var j = 0; j < graphData.length; j++) {
+    var x = padding.left + (j / (MAX_GRAPH_POINTS - 1)) * plotW;
+    var y = padding.top + plotH - (graphData[j] / maxVal) * plotH;
+    ctx.lineTo(x, y);
+  }
+  ctx.lineTo(padding.left + ((graphData.length - 1) / (MAX_GRAPH_POINTS - 1)) * plotW, h - padding.bottom);
+  ctx.closePath();
+  ctx.fillStyle = grad;
+  ctx.fill();
+
+  // Draw line
+  ctx.beginPath();
+  ctx.strokeStyle = '#00dfc1';
+  ctx.lineWidth = 2;
+  ctx.shadowColor = 'rgba(0,223,193,0.6)';
+  ctx.shadowBlur = 6;
+  for (var k = 0; k < graphData.length; k++) {
+    var lx = padding.left + (k / (MAX_GRAPH_POINTS - 1)) * plotW;
+    var ly = padding.top + plotH - (graphData[k] / maxVal) * plotH;
+    if (k === 0) ctx.moveTo(lx, ly); else ctx.lineTo(lx, ly);
+  }
+  ctx.stroke();
+  ctx.shadowBlur = 0;
+
+  // Y-axis labels
+  ctx.fillStyle = 'rgba(225,225,240,0.4)';
+  ctx.font = '8px sans-serif';
+  ctx.textAlign = 'right';
+  ctx.fillText(Math.round(maxVal), padding.left - 2, padding.top + 8);
+  ctx.fillText('0', padding.left - 2, h - padding.bottom + 2);
+}
+
+// ===== STAGE INDICATORS =====
+function setStage(stage) {
+  var dots = { ping: 'dotPing', download: 'dotDownload', upload: 'dotUpload' };
+  var keys = Object.keys(dots);
+  for (var i = 0; i < keys.length; i++) {
+    var dot = document.getElementById(dots[keys[i]]);
+    dot.classList.remove('active', 'done', 'pulse-active');
+    dot.style.background = 'rgba(225,225,240,0.3)';
+  }
+
+  var order = ['ping', 'download', 'upload'];
+  var currentIdx = order.indexOf(stage);
+
+  for (var j = 0; j < order.length; j++) {
+    var d = document.getElementById(dots[order[j]]);
+    if (j < currentIdx) {
+      d.classList.add('done');
+      d.style.background = '#00dfc1';
+      d.style.opacity = '0.6';
+    } else if (j === currentIdx) {
+      d.classList.add('active', 'pulse-active');
+      d.style.background = '#00dfc1';
+      d.style.opacity = '1';
+    }
+  }
+}
+
+// ===== MAIN TEST FLOW =====
+function startTest() {
+  if (testRunning) return;
+  testRunning = true;
+
+  errorBanner.classList.add('hidden');
+  resetGauge();
+  initGraph();
+  resultsCard.classList.add('hidden');
+  networkInfoPanel.classList.add('hidden');
+  graphContainer.classList.remove('hidden');
+  btnStart.classList.add('hidden');
+  btnCancel.classList.remove('hidden');
+  serverSelector.classList.add('hidden');
+  setStage('ping');
+  stageLabel.textContent = 'Pinging...';
+  speedUnit.textContent = 'ms';
+
+  if (window.AndroidBridge) {
+    window.AndroidBridge.selectServer(selectedServerId);
+    window.AndroidBridge.startSpeedTest();
+  } else {
+    simulateTest();
+  }
+}
+
+function cancelTest() {
+  if (window.AndroidBridge) {
+    window.AndroidBridge.cancelSpeedTest();
+  }
+  resetUI();
+}
+
+function retryTest() {
+  resultsCard.classList.add('hidden');
+  networkInfoPanel.classList.add('hidden');
+  errorBanner.classList.add('hidden');
+  startTest();
+}
+
+function resetUI() {
+  testRunning = false;
+  resetGauge();
+  btnStart.classList.remove('hidden');
+  btnCancel.classList.add('hidden');
+  graphContainer.classList.add('hidden');
+  serverSelector.classList.remove('hidden');
+  setStage('ping');
+  document.getElementById('dotPing').style.background = 'rgba(225,225,240,0.3)';
+  document.getElementById('dotDownload').style.background = 'rgba(225,225,240,0.3)';
+  document.getElementById('dotUpload').style.background = 'rgba(225,225,240,0.3)';
+  var allDots = document.querySelectorAll('.stage-dot');
+  for (var i = 0; i < allDots.length; i++) {
+    allDots[i].classList.remove('active','done','pulse-active');
+  }
+}
+
+// ===== BRIDGE CALLBACKS (called from native) =====
+window.onSpeedTestProgress = function(progressJson) {
+  var p = typeof progressJson === 'string' ? JSON.parse(progressJson) : progressJson;
+
+  switch (p.stage) {
+    case 'ping':
+      setStage('ping');
+      stageLabel.textContent = 'Pinging...';
+      speedUnit.textContent = 'ms';
+      speedValue.textContent = p.pingMs;
+      setGauge(Math.min(p.pingMs, 200), 200);
+      break;
+
+    case 'download':
+      setStage('download');
+      stageLabel.textContent = 'Downloading';
+      speedUnit.textContent = 'Mbps';
+      graphLabel.textContent = 'Mbps \u2193';
+      speedValue.textContent = Math.round(p.currentSpeed);
+      setGauge(p.currentSpeed, 200);
+      addGraphPoint(p.currentSpeed);
+      break;
+
+    case 'upload':
+      setStage('upload');
+      stageLabel.textContent = 'Uploading';
+      speedUnit.textContent = 'Mbps';
+      graphLabel.textContent = 'Mbps \u2191';
+      speedValue.textContent = Math.round(p.currentSpeed);
+      setGauge(p.currentSpeed, 100);
+      addGraphPoint(p.currentSpeed);
+      break;
+  }
+};
+
+window.onSpeedTestResult = function(resultJson) {
+  var r = typeof resultJson === 'string' ? JSON.parse(resultJson) : resultJson;
+  lastResult = r;
+  testRunning = false;
+
+  if (r.error) {
+    showError(r.error);
+    resetUI();
+    return;
+  }
+
+  setGauge(r.downloadResult, 200);
+  speedValue.textContent = Math.round(r.downloadResult);
+  speedUnit.textContent = 'Mbps';
+  stageLabel.textContent = 'Complete';
+  setStage('upload');
+  document.getElementById('dotPing').classList.add('done');
+  document.getElementById('dotPing').style.background = '#00dfc1';
+  document.getElementById('dotDownload').classList.add('done');
+  document.getElementById('dotDownload').style.background = '#00dfc1';
+  document.getElementById('dotUpload').classList.add('done');
+  document.getElementById('dotUpload').style.background = '#00dfc1';
+
+  btnCancel.classList.add('hidden');
+  btnStart.classList.remove('hidden');
+  btnStart.innerHTML = '<span class="material-symbols-outlined text-lg">🔄</span> Test Again';
+
+  showNetworkInfo(r);
+  showResults(r);
+};
+
+window.onSpeedTestCancelled = function() {
+  testRunning = false;
+  resetUI();
+};
+
+window.onNetworkInfo = function(infoJson) {
+  var info = typeof infoJson === 'string' ? JSON.parse(infoJson) : infoJson;
+  showNetworkInfo(info);
+};
+
+// ===== DISPLAY HELPERS =====
+function showNetworkInfo(data) {
+  document.getElementById('infoIsp').textContent = data.ispName || 'Unknown';
+  document.getElementById('infoConnection').textContent = data.connectionType || 'Unknown';
+  document.getElementById('infoLocation').textContent = data.serverLocation || 'Unknown';
+  document.getElementById('networkIcon').textContent = data.networkTypeIcon || '📶';
+  networkInfoPanel.classList.remove('hidden');
+  networkInfoPanel.classList.add('fade-in');
+}
+
+function showResults(r) {
+  document.getElementById('resDownload').textContent = r.downloadResult.toFixed(1);
+  document.getElementById('resUpload').textContent = r.uploadResult.toFixed(1);
+  document.getElementById('resPing').textContent = r.pingScore;
+  document.getElementById('resJitter').textContent = r.jitter.toFixed(1);
+
+  var grade = getGrade(r.downloadResult, r.pingScore, r.jitter, r.packetLoss);
+  var gradeEl = document.getElementById('resultGrade');
+  gradeEl.textContent = grade.label;
+  gradeEl.style.background = grade.bg;
+  gradeEl.style.color = grade.color;
+
+  resultsCard.classList.remove('hidden');
+  resultsCard.classList.add('scale-in');
+}
+
+function getGrade(dl, ping, jitter, loss) {
+  if (dl >= 100 && ping < 20 && jitter < 5 && loss < 0.5)
+    return { label: 'Excellent', bg: 'rgba(0,223,193,0.15)', color: '#00dfc1' };
+  if (dl >= 50 && ping < 50 && jitter < 15 && loss < 2)
+    return { label: 'Good', bg: 'rgba(0,223,193,0.1)', color: '#00dfc1' };
+  if (dl >= 20 && ping < 100 && jitter < 30 && loss < 5)
+    return { label: 'Fair', bg: 'rgba(255,180,0,0.15)', color: '#ffb400' };
+  return { label: 'Poor', bg: 'rgba(255,180,171,0.15)', color: '#ffb4ab' };
+}
+
+function shareResult() {
+  if (!lastResult) return;
+  if (window.AndroidBridge) {
+    window.AndroidBridge.shareResult(JSON.stringify(lastResult));
+  } else {
+    var text = '\uD83D\uDCF6 Speed Test Result\n\u2B07 '+lastResult.downloadResult.toFixed(1)+' Mbps | \u2B06 '+lastResult.uploadResult.toFixed(1)+' Mbps\n\uD83C\uDFD3 Ping: '+lastResult.pingScore+'ms | Jitter: '+lastResult.jitter.toFixed(1)+'ms\n\uD83C\uDF10 '+lastResult.ispName+' ('+lastResult.connectionType+')';
+    if (navigator.share) {
+      navigator.share({ title: 'Speed Test Result', text: text });
+    } else {
+      alert(text);
+    }
+  }
+}
+
+// ===== BROWSER SIMULATION (for testing without native bridge) =====
+function simulateTest() {
+  var stages = [
+    { stage: 'ping', duration: 2000, pingMs: function() { return 15 + Math.random() * 30; } },
+    { stage: 'download', duration: 5000, speed: function() { return 30 + Math.random() * 80; } },
+    { stage: 'upload', duration: 4000, speed: function() { return 5 + Math.random() * 25; } }
+  ];
+
+  var stageIdx = 0;
+  var startTime = Date.now();
+
+  function tick() {
+    if (!testRunning) return;
+    var s = stages[stageIdx];
+    var elapsed = Date.now() - startTime;
+    var stageStart = 0;
+    for (var i = 0; i < stageIdx; i++) stageStart += stages[i].duration;
+    var stageElapsed = elapsed - stageStart;
+    var progress = Math.min(stageElapsed / s.duration, 1);
+
+    if (s.stage === 'ping') {
+      window.onSpeedTestProgress({ stage: 'ping', progress: progress, pingMs: Math.round(s.pingMs()) });
+    } else {
+      window.onSpeedTestProgress({ stage: s.stage, progress: progress, currentSpeed: s.speed() });
+    }
+
+    if (progress >= 1) {
+      stageIdx++;
+      if (stageIdx >= stages.length) {
+        window.onSpeedTestResult({
+          downloadResult: 55 + Math.random() * 40,
+          uploadResult: 8 + Math.random() * 20,
+          pingScore: 18 + Math.floor(Math.random() * 25),
+          jitter: 2 + Math.random() * 8,
+          packetLoss: Math.random() * 1.5,
+          stabilityIndex: 0.75 + Math.random() * 0.2,
+          ispName: 'Simulated ISP',
+          connectionType: 'WiFi',
+          serverLocation: 'Local Test'
+        });
+        return;
+      }
+    }
+    setTimeout(tick, 150);
+  }
+  tick();
+}
+</script>
+</body></html>

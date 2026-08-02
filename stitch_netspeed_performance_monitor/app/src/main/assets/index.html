@@ -1,0 +1,2129 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" name="viewport"/>
+<title>NetSpeed Meter</title>
+<link rel="stylesheet" href="styles.css"/>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════
+     PERMISSION ONBOARDING OVERLAY
+     First-launch guided permission setup
+     ═══════════════════════════════════════════ -->
+<div id="onboardingOverlay" class="onboarding-overlay">
+  <div class="onboarding-backdrop"></div>
+  <div class="onboarding-card">
+    <!-- Header -->
+    <div class="onboard-header">
+      <div class="onboard-logo">
+        <svg viewBox="0 0 48 48"><circle cx="24" cy="24" r="21" fill="none" stroke="#00dfc1" stroke-width="3"/><circle cx="24" cy="24" r="8" fill="#00dfc1"/><line x1="24" y1="3" x2="24" y2="10" stroke="#00dfc1" stroke-width="3" stroke-linecap="round"/></svg>
+      </div>
+      <h2 class="onboard-title">NetSpeed Meter</h2>
+      <p class="onboard-subtitle">Allow notification access to monitor your network speed in real-time</p>
+    </div>
+
+    <!-- Progress Indicator -->
+    <div class="onboard-progress" id="onboardProgress">
+      <div class="onboard-progress-bar" id="onboardProgressBar"></div>
+    </div>
+
+    <!-- Step 1: Notification -->
+    <div class="onboard-step" id="onboardStepNotification">
+      <div class="onboard-step-icon">
+        <svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+      </div>
+      <div class="onboard-step-info">
+        <div class="onboard-step-title">Notification Access</div>
+        <div class="onboard-step-desc">Shows live speed in your notification bar so you can monitor without opening the app</div>
+      </div>
+      <div class="onboard-step-status" id="statusNotification">
+        <span class="onboard-badge badge-pending">Required</span>
+      </div>
+      <button class="onboard-btn" id="btnNotification" onclick="onboardRequest('notification')">
+        Allow
+      </button>
+    </div>
+
+    <!-- Complete Button -->
+    <button class="onboard-complete-btn" id="btnCompleteOnboarding" onclick="completeOnboardingFlow()" disabled>
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+      Complete Setup
+    </button>
+
+    <!-- Footer -->
+    <p class="onboard-footer">
+      You can change these anytime in <strong>Settings</strong>.
+      <br><a href="#" onclick="skipOnboarding()" style="color:var(--text-muted);text-decoration:underline">Skip for now</a>
+    </p>
+  </div>
+</div>
+
+<!-- 3D Network Background Animation Canvas -->
+<canvas id="bgCanvas"></canvas>
+
+<!-- ============================================================
+     NetSpeed Meter — Single Page Application
+     Professional UI inspired by Speedtest by Ookla
+     All SVG icons, no emoji, no CDN dependencies
+     ============================================================ -->
+
+<div class="app">
+
+<!-- ── HEADER ── -->
+<header class="app-header">
+  <div class="app-logo">
+    <svg viewBox="0 0 28 28"><circle cx="14" cy="14" r="12" fill="none" stroke="#00dfc1" stroke-width="2.5"/><circle cx="14" cy="14" r="5" fill="#00dfc1"/><line x1="14" y1="2" x2="14" y2="6" stroke="#00dfc1" stroke-width="2.5" stroke-linecap="round"/></svg>
+    <span>NetSpeed</span>
+  </div>
+  <div class="header-actions">
+    <button class="icon-btn" id="btnRefresh" onclick="refreshData()">
+      <svg viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+    </button>
+  </div>
+</header>
+
+<!-- ── MAIN CONTENT ── -->
+<main class="app-main">
+
+  <!-- ===== HOME PANEL ===== -->
+  <section class="panel active" id="panelHome">
+    <div class="panel-content">
+      <!-- Speed Gauge -->
+      <div class="speed-display">
+        <div class="speed-gauge-container">
+          <div class="speed-gauge-ring"></div>
+          <svg class="speed-gauge-arc" viewBox="0 0 260 260">
+            <defs>
+              <linearGradient id="arcGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                <stop offset="0%" stop-color="#00dfc1" stop-opacity="0.2"/>
+                <stop offset="50%" stop-color="#00dfc1" stop-opacity="0.8"/>
+                <stop offset="100%" stop-color="#00daf8" stop-opacity="0.2"/>
+              </linearGradient>
+            </defs>
+            <path d="M 40 210 A 100 100 0 0 1 220 210" fill="none" stroke="rgba(255,255,255,0.06)" stroke-width="8" stroke-linecap="round"/>
+            <path id="homeArc" d="M 40 210 A 100 100 0 0 1 130 110" fill="none" stroke="url(#arcGrad)" stroke-width="8" stroke-linecap="round" stroke-dasharray="0 400" style="transition:stroke-dasharray 0.4s ease-out"/>
+          </svg>
+          <div class="speed-gauge-inner">
+            <span class="speed-label">Download</span>
+            <span class="speed-value" id="liveDownload">--</span>
+            <span class="speed-unit" id="homeSpeedUnit">kbps</span>
+          </div>
+        </div>
+        <div class="speed-dual">
+          <div class="speed-mini">
+            <span class="val" id="liveUpload">--</span>
+            <span class="lbl">Upload</span>
+          </div>
+          <div class="speed-mini">
+            <span class="val" id="livePing">--</span>
+            <span class="lbl">ms Ping</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Quick Stats -->
+      <div class="stats-row">
+        <div class="stat-card">
+          <svg class="stat-icon" viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="20" rx="4"/><circle cx="12" cy="12" r="4"/><line x1="12" y1="2" x2="12" y2="6"/><line x1="12" y1="18" x2="12" y2="22"/><line x1="2" y1="12" x2="6" y2="12"/><line x1="18" y1="12" x2="22" y2="12"/></svg>
+          <span class="stat-val" id="connectionType">--</span>
+          <span class="stat-lbl">Network</span>
+        </div>
+        <div class="stat-card">
+          <svg class="stat-icon" viewBox="0 0 24 24"><path d="M12 20V10"/><path d="M18 20V4"/><path d="M6 20v-4"/></svg>
+          <span class="stat-val" id="signalStrength">--</span>
+          <span class="stat-lbl">Signal</span>
+        </div>
+      </div>
+
+      <!-- Data Usage -->
+      <div class="usage-card">
+        <div class="usage-info">
+          <div class="usage-icon">
+            <svg viewBox="0 0 24 24"><path d="M12 2a10 10 0 1 0 10 10H12V2z"/><path d="M12 2a10 10 0 0 1 10 10H12V2z" fill="rgba(0,223,193,0.15)"/></svg>
+          </div>
+          <div class="usage-text">
+            <div class="usage-title">Total Usage</div>
+            <div class="usage-sub">Today</div>
+          </div>
+        </div>
+        <div><span class="usage-val" id="totalUsage">--</span><span class="usage-val-unit" id="usageUnit">GB</span></div>
+      </div>
+
+      <!-- GO Button -->
+      <button class="btn-go" onclick="switchPanel('panelTest')">GO</button>
+    </div>
+  </section>
+
+  <!-- ===== TEST PANEL ===== -->
+  <section class="panel" id="panelTest">
+    <div class="panel-content">
+      <!-- Gauge -->
+      <div class="test-gauge-wrap">
+        <div class="test-gauge-bg"></div>
+        <svg viewBox="0 0 240 240" style="position:absolute;inset:0;width:100%;height:100%">
+          <defs>
+            <linearGradient id="testArcGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stop-color="#00dfc1" stop-opacity="0.2"/>
+              <stop offset="50%" stop-color="#00dfc1" stop-opacity="0.9"/>
+              <stop offset="100%" stop-color="#00daf8" stop-opacity="0.2"/>
+            </linearGradient>
+          </defs>
+          <path d="M 35 195 A 95 95 0 0 1 205 195" fill="none" stroke="rgba(255,255,255,0.05)" stroke-width="7" stroke-linecap="round"/>
+          <path id="testArc" d="M 35 195 A 95 95 0 0 1 120 100" fill="none" stroke="url(#testArcGrad)" stroke-width="7" stroke-linecap="round" stroke-dasharray="0 400" style="transition:stroke-dasharray 0.3s ease-out"/>
+          <!-- Needle -->
+          <g id="testNeedle" style="transform:rotate(-90deg);transform-origin:120px 120px;transition:transform 0.3s ease-out">
+            <line x1="120" y1="120" x2="120" y2="42" stroke="#00dfc1" stroke-width="2.5" stroke-linecap="round"/>
+            <circle cx="120" cy="120" r="7" fill="#0a0c10" stroke="#00dfc1" stroke-width="2"/>
+            <circle cx="120" cy="120" r="3" fill="#00dfc1"/>
+          </g>
+        </svg>
+        <div class="test-gauge-inner">
+          <span class="test-stage" id="stageLabel">Ready</span>
+          <span class="test-speed" id="speedValue">--</span>
+          <span class="test-unit" id="speedUnit">Mbps</span>
+        </div>
+      </div>
+
+      <!-- Stage Indicators -->
+      <div class="stage-row" id="stageIndicators">
+        <div class="stage-item"><div class="stage-dot" id="dotPing"></div><span class="stage-name">Ping</span></div>
+        <div class="stage-line"></div>
+        <div class="stage-item"><div class="stage-dot" id="dotDownload"></div><span class="stage-name">Download</span></div>
+        <div class="stage-line"></div>
+        <div class="stage-item"><div class="stage-dot" id="dotUpload"></div><span class="stage-name">Upload</span></div>
+      </div>
+
+      <!-- Graph -->
+      <div class="test-graph-wrap" id="graphContainer" style="display:none">
+        <canvas id="speedGraph" width="360" height="100"></canvas>
+      </div>
+
+      <!-- Server Selection -->
+      <div class="server-row" id="serverChips"></div>
+
+      <!-- Results -->
+      <div class="results-card" id="resultsCard" style="display:none">
+        <div class="results-header">
+          <span class="results-title">Test Results</span>
+          <span class="results-grade" id="resultGrade">--</span>
+        </div>
+        <div class="results-grid">
+          <div class="result-item"><span class="r-val" id="resDownload">--</span><span class="r-lbl">Mbps Down</span></div>
+          <div class="result-item"><span class="r-val" id="resUpload">--</span><span class="r-lbl">Mbps Up</span></div>
+          <div class="result-item"><span class="r-val" id="resPing">--</span><span class="r-lbl">ms Ping</span></div>
+          <div class="result-item"><span class="r-val" id="resJitter">--</span><span class="r-lbl">ms Jitter</span></div>
+        </div>
+        <div class="results-actions">
+          <button class="btn-outline" onclick="shareResult()">
+            <svg width="16" height="16" viewBox="0 0 24 24"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+            Share
+          </button>
+          <button class="btn-primary-sm" onclick="retryTest()">
+            <svg width="16" height="16" viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+            Retry
+          </button>
+        </div>
+      </div>
+
+      <!-- Error -->
+      <div id="errorBanner" style="display:none;width:100%;background:rgba(255,107,107,0.08);border:1px solid rgba(255,107,107,0.2);border-radius:12px;padding:12px 16px;margin-bottom:12px;font-size:12px;color:#ff6b6b"></div>
+
+      <!-- Start Button -->
+      <button class="btn-start" id="btnStart" onclick="startTest()">
+        <svg width="20" height="20" viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3" fill="#000"/></svg>
+        Area Test
+      </button>
+      <button class="btn-start" id="btnCancel" onclick="cancelTest()" style="display:none;background:rgba(255,107,107,0.15);color:#ff6b6b;box-shadow:none">
+        <svg width="20" height="20" viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="2" fill="none" stroke="#ff6b6b" stroke-width="2"/></svg>
+        Cancel
+      </button>
+    </div>
+  </section>
+
+  <!-- ===== HISTORY PANEL ===== -->
+  <section class="panel" id="panelHistory">
+    <div class="panel-content">
+      <div class="data-tabs" id="historyTabs" style="margin-bottom: 12px; display: flex; gap: 8px;">
+        <button class="data-tab active" id="tabDataUsage" onclick="switchHistoryView('dataUsage')" style="flex:1">Data Usage</button>
+        <button class="data-tab" id="tabAreaTest" onclick="switchHistoryView('areaTest')" style="flex:1">Area Test</button>
+      </div>
+
+      <!-- Area Test Content -->
+      <div id="historyAreaTestContent" style="display:none; width: 100%;">
+        <div class="history-actions" style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 8px; width: 100%;">
+           <span style="font-size:12px;color:var(--text-secondary);font-weight:600">Test History</span>
+           <div class="header-edit-actions" style="display:flex; align-items:center; gap:8px;">
+             <button class="delete-btn-header" id="btnDeleteSelectedHistory" onclick="deleteSelected('area')" style="display:none; background:var(--error); color:#fff; padding:4px 12px; border-radius:var(--radius-full); font-size:10px; font-weight:700; text-transform:uppercase;">Delete</button>
+             <button class="icon-btn" id="btnEditHistory" onclick="toggleEditMode('area')" style="width:32px; height:32px; border:none; background:rgba(255,255,255,0.05);">
+               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+             </button>
+           </div>
+        </div>
+        <div class="history-summary" id="summarySection" style="display:none">
+          <h3>Summary</h3>
+          <div class="summary-grid">
+            <div class="summary-item"><span class="s-val" id="avgDownload">--</span><span class="s-lbl">Avg Down</span></div>
+            <div class="summary-item"><span class="s-val" id="avgUpload">--</span><span class="s-lbl">Avg Up</span></div>
+            <div class="summary-item"><span class="s-val" id="avgPing">--</span><span class="s-lbl">Avg Ping</span></div>
+          </div>
+        </div>
+        <div class="history-list" id="historyList"></div>
+        <div class="empty-state" id="emptyState">
+          <svg viewBox="0 0 24 24"><path d="M12 20V10"/><path d="M18 20V4"/><path d="M6 20v-4"/></svg>
+          <p>No Tests Yet</p>
+          <span>Run your first speed test</span>
+        </div>
+        
+        <!-- Delete Action Bar -->
+        <!-- Delete Action Bar Removed -->
+      </div>
+
+      <!-- Data Usage Content -->
+      <div id="historyDataUsageContent" style="width: 100%;">
+        <!-- Period Tabs -->
+        <div class="data-tabs" id="dataTabs" style="display:flex; align-items:center; gap:8px;">
+          <button class="data-tab active" data-tab="daily" onclick="switchDataTab('daily')">Daily</button>
+          <button class="data-tab" data-tab="weekly" onclick="switchDataTab('weekly')">Weekly</button>
+          <button class="data-tab" data-tab="monthly" onclick="switchDataTab('monthly')">Monthly</button>
+          <button class="delete-btn-header" id="btnDeleteSelectedData" onclick="deleteSelected('data')" style="display:none; background:var(--error); color:#fff; padding:4px 12px; border-radius:var(--radius-full); font-size:10px; font-weight:700; text-transform:uppercase; margin-left:auto;">Delete</button>
+        </div>
+
+        <!-- Summary Cards -->
+        <div class="data-summary-row" id="dataSummary">
+          <div class="data-summary-card">
+            <div class="dsc-icon mobile">
+              <svg viewBox="0 0 24 24"><rect x="5" y="2" width="14" height="20" rx="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>
+            </div>
+            <div class="dsc-info">
+              <span class="dsc-val" id="dataMobile">--</span>
+              <span class="dsc-lbl">Mobile Data</span>
+            </div>
+          </div>
+          <div class="data-summary-card">
+            <div class="dsc-icon wifi">
+              <svg viewBox="0 0 24 24"><path d="M5 12.55a11 11 0 0 1 14.08 0"/><path d="M1.42 9a16 16 0 0 1 21.16 0"/><path d="M8.53 16.11a6 6 0 0 1 6.95 0"/><circle cx="12" cy="20" r="1"/></svg>
+            </div>
+            <div class="dsc-info">
+              <span class="dsc-val" id="dataWifi">--</span>
+              <span class="dsc-lbl">WiFi Data</span>
+            </div>
+          </div>
+          <div class="data-summary-card">
+            <div class="dsc-icon total">
+              <svg viewBox="0 0 24 24"><path d="M12 2a10 10 0 1 0 10 10H12V2z"/></svg>
+            </div>
+            <div class="dsc-info">
+              <span class="dsc-val" id="dataTotal">--</span>
+              <span class="dsc-lbl">Total Usage</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Bar Chart -->
+        <div class="data-chart-wrap" id="dataChartWrap">
+          <canvas id="dataChart"></canvas>
+        </div>
+
+        <!-- Daily List -->
+        <div class="data-list" id="dataList"></div>
+
+        <!-- Data Usage Delete Action Bar -->
+        <!-- Data Usage Delete Action Bar Removed -->
+
+        <!-- Empty State -->
+        <div class="empty-state" id="dataEmpty">
+          <svg viewBox="0 0 24 24"><path d="M12 2a10 10 0 1 0 10 10H12V2z"/></svg>
+          <p>No Data Yet</p>
+          <span>Usage data will appear here</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== SETTINGS PANEL ===== -->
+  <section class="panel" id="panelSettings">
+    <div class="panel-content">
+      <div class="settings-section">
+        <h3>Monitoring</h3>
+        <div class="settings-card">
+          <div class="setting-row">
+            <div class="setting-info">
+              <svg viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-6.219-8.56"/><polyline points="21 3 21 9 15 9"/></svg>
+              <div class="setting-text"><div class="st-title">Network Monitor</div><div class="st-sub">Real-time speed tracking</div></div>
+            </div>
+            <div class="toggle on" id="toggleService" onclick="toggleSetting('serviceEnabled',this)"></div>
+          </div>
+          <div class="setting-row">
+            <div class="setting-info">
+              <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="3"/><rect x="7" y="7" width="10" height="10" rx="1"/></svg>
+              <div class="setting-text"><div class="st-title">Speed Overlay</div><div class="st-sub">Floating speed indicator</div></div>
+            </div>
+            <div class="toggle on" id="toggleOverlay" onclick="toggleSetting('overlayEnabled',this)"></div>
+          </div>
+          <div class="setting-row">
+            <div class="setting-info">
+              <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+              <div class="setting-text"><div class="st-title">Auto Start</div><div class="st-sub">Start on device boot</div></div>
+            </div>
+            <div class="toggle" id="toggleAutoStart" onclick="toggleSetting('autoStart',this)"></div>
+          </div>
+          <div class="setting-row">
+            <div class="setting-info">
+              <svg viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+              <div class="setting-text"><div class="st-title">Restart Monitor</div><div class="st-sub">Tap if background speed stops</div></div>
+            </div>
+            <button class="btn-restart-monitor" onclick="restartMonitor()">Restart</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="settings-section">
+        <h3>Display</h3>
+        <div class="settings-card">
+          <div class="setting-row">
+            <div class="setting-info">
+              <svg viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+              <div class="setting-text"><div class="st-title">Dark Mode</div><div class="st-sub">Always dark theme</div></div>
+            </div>
+            <div class="toggle on" id="toggleDarkMode" onclick="toggleSetting('darkMode',this)"></div>
+          </div>
+          <div class="setting-row">
+            <div class="setting-info">
+              <svg viewBox="0 0 24 24"><line x1="4" y1="20" x2="20" y2="20"/><line x1="4" y1="14" x2="20" y2="14"/><line x1="4" y1="8" x2="20" y2="8"/><line x1="4" y1="2" x2="20" y2="2"/></svg>
+              <div class="setting-text"><div class="st-title">Speed Unit</div><div class="st-sub">Mbps or MB/s</div></div>
+            </div>
+            <select class="setting-select" id="unitPreference" onchange="saveSelect('unitPreference',this.value)">
+              <option value="kbps">kbps</option>
+              <option value="Mbps">Mbps</option>
+              <option value="MB/s">MB/s</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <div class="settings-section">
+        <h3>Optimization</h3>
+        <div class="settings-card">
+          <div class="setting-row">
+            <div class="setting-info">
+              <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+              <div class="setting-text"><div class="st-title">Data Saver Mode</div><div class="st-sub">Reduce background data usage</div></div>
+            </div>
+            <div class="toggle" id="toggleDataSaver" onclick="toggleSetting('dataSaver',this)"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="settings-section">
+        <h3>Danger Zone</h3>
+        <button class="btn-danger" onclick="confirmReset()">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
+          Reset All Data & History
+        </button>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<!-- ── BOTTOM NAVIGATION ── -->
+<nav class="bottom-nav">
+  <button class="nav-item active" data-panel="panelHome" onclick="switchPanel('panelHome')">
+    <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+    <span>Home</span>
+  </button>
+  <button class="nav-item" data-panel="panelTest" onclick="switchPanel('panelTest')">
+    <svg viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+    <span>Test</span>
+  </button>
+  <button class="nav-item" data-panel="panelHistory" onclick="switchPanel('panelHistory')">
+    <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+    <span>History</span>
+  </button>
+  <!-- Data button removed, combined with History -->
+  <button class="nav-item" data-panel="panelSettings" onclick="switchPanel('panelSettings')">
+    <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+    <span>Settings</span>
+  </button>
+</nav>
+
+</div><!-- .app -->
+
+<!-- ============================================================
+     APPLICATION LOGIC
+     ============================================================ -->
+<script>
+// ═══════════════════════════════════════════
+// 3D NETWORK BACKGROUND ANIMATION (Responsive)
+// ═══════════════════════════════════════════
+
+(function() {
+  var canvas = document.getElementById('bgCanvas');
+  if (!canvas) return;
+  var ctx = canvas.getContext('2d');
+
+  // ── Responsive configuration (computed on resize) ──
+  var NODE_COUNT, MAX_DIST, ORBIT_SPEED, FOCAL_LENGTH;
+  var nodes = [];
+  var w, h, cx, cy, dpr;
+
+  // ── Color themes by network type ──
+  var themes = {
+    'WiFi':       { primary: 'rgba(100,181,246,OPACITY)', glow: 'rgba(100,181,246,OPACITY)', name: 'wifi' },
+    'Mobile Data':{ primary: 'rgba(255,138,101,OPACITY)', glow: 'rgba(255,138,101,OPACITY)', name: 'mobile' },
+    '5G':         { primary: 'rgba(0,223,193,OPACITY)',   glow: 'rgba(0,223,193,OPACITY)',   name: '5g' },
+    '4G':         { primary: 'rgba(255,183,77,OPACITY)',  glow: 'rgba(255,183,77,OPACITY)',  name: '4g' },
+    '4G LTE':     { primary: 'rgba(255,183,77,OPACITY)',  glow: 'rgba(255,183,77,OPACITY)',  name: '4g' },
+    '3G':         { primary: 'rgba(255,107,107,OPACITY)', glow: 'rgba(255,107,107,OPACITY)', name: '3g' },
+    'Ethernet':   { primary: 'rgba(124,77,255,OPACITY)',  glow: 'rgba(124,77,255,OPACITY)',  name: 'eth' },
+    'Unknown':    { primary: 'rgba(0,223,193,OPACITY)',   glow: 'rgba(0,223,193,OPACITY)',   name: 'unknown' }
+  };
+  var currentTheme = themes['Unknown'];
+  var targetTheme = themes['Unknown'];
+  var themeTransition = 0; // 0..1 lerp factor
+
+  // ── Compute responsive parameters from viewport width ──
+  function computeParams(vw) {
+    if (vw <= 360) {
+      // Small phones (320-360px)
+      NODE_COUNT = 18;
+      MAX_DIST = 100;
+      ORBIT_SPEED = 0.00025;
+      FOCAL_LENGTH = 280;
+    } else if (vw <= 480) {
+      // Medium phones (360-480px)
+      NODE_COUNT = 24;
+      MAX_DIST = 130;
+      ORBIT_SPEED = 0.00032;
+      FOCAL_LENGTH = 320;
+    } else if (vw <= 768) {
+      // Large phones / small tablets (480-768px)
+      NODE_COUNT = 30;
+      MAX_DIST = 160;
+      ORBIT_SPEED = 0.00038;
+      FOCAL_LENGTH = 380;
+    } else if (vw <= 1024) {
+      // Tablets (768-1024px)
+      NODE_COUNT = 38;
+      MAX_DIST = 200;
+      ORBIT_SPEED = 0.00045;
+      FOCAL_LENGTH = 440;
+    } else {
+      // Desktop / large tablets (1024px+)
+      NODE_COUNT = 45;
+      MAX_DIST = 240;
+      ORBIT_SPEED = 0.0005;
+      FOCAL_LENGTH = 500;
+    }
+  }
+
+  // ── 3D Node ──
+  function Node() {
+    this.reset();
+  }
+  Node.prototype.reset = function() {
+    this.theta = Math.random() * Math.PI * 2;
+    this.phi = (Math.random() - 0.5) * Math.PI * 0.7;
+    this.radius = 60 + Math.random() * 200;
+    this.speed = (0.3 + Math.random() * 1.2) * ORBIT_SPEED;
+    this.phiSpeed = (Math.random() - 0.5) * ORBIT_SPEED * 0.5;
+    this.size = 1.0 + Math.random() * 2.5;
+    this.pulse = Math.random() * Math.PI * 2;
+    this.pulseSpeed = 0.01 + Math.random() * 0.03;
+  };
+
+  // Project 3D → 2D with perspective
+  function project(node) {
+    var cosP = Math.cos(node.phi);
+    var sinP = Math.sin(node.phi);
+    var cosT = Math.cos(node.theta);
+    var sinT = Math.sin(node.theta);
+
+    var x3 = node.radius * cosP * cosT;
+    var y3 = node.radius * cosP * sinT;
+    var z3 = node.radius * sinP;
+
+    var scale = FOCAL_LENGTH / (FOCAL_LENGTH + z3 + 200);
+
+    return {
+      x: cx + x3 * scale,
+      y: cy + y3 * scale * 0.6,
+      z: z3,
+      scale: scale
+    };
+  }
+
+  // ── Initialize / reinitialize nodes ──
+  function initNodes() {
+    nodes = [];
+    for (var i = 0; i < NODE_COUNT; i++) {
+      nodes.push(new Node());
+    }
+  }
+
+  // ── Full resize handler (canvas dimensions + responsive params + node reinit) ──
+  function resize() {
+    dpr = window.devicePixelRatio || 1;
+
+    // Use visual viewport dimensions for mobile accuracy (avoids keyboard/address bar issues)
+    var vw, vh;
+    if (window.visualViewport) {
+      vw = window.visualViewport.width;
+      vh = window.visualViewport.height;
+    } else {
+      vw = window.innerWidth;
+      vh = window.innerHeight;
+    }
+
+    // Compute responsive parameters based on viewport width
+    computeParams(vw);
+
+    // Set canvas buffer size at device-pixel resolution for crisp rendering
+    canvas.width = Math.floor(vw * dpr);
+    canvas.height = Math.floor(vh * dpr);
+
+    // Scale the drawing context
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+    // Logical dimensions for drawing
+    w = vw;
+    h = vh;
+    cx = w / 2;
+    cy = h / 2;
+
+    // Rebuild nodes for new density
+    initNodes();
+  }
+
+  // ── Lerp color helper ──
+  function lerpColor(c1, c2, t) {
+    function parse(c) {
+      var m = c.match(/[\d.]+/g);
+      return { r: +m[0], g: +m[1], b: +m[2], a: +m[3] };
+    }
+    var a = parse(c1), b = parse(c2);
+    var r = Math.round(a.r + (b.r - a.r) * t);
+    var g = Math.round(a.g + (b.g - a.g) * t);
+    var bl = Math.round(a.b + (b.b - a.b) * t);
+    var al = (a.a + (b.a - a.a) * t).toFixed(2);
+    return 'rgba(' + r + ',' + g + ',' + bl + ',' + al + ')';
+  }
+
+  // ── Animation loop ──
+  function animate() {
+    ctx.clearRect(0, 0, w, h);
+
+    // Smooth theme transition
+    if (themeTransition < 1) {
+      themeTransition = Math.min(1, themeTransition + 0.02);
+    }
+
+    // Update node positions
+    var projected = [];
+    for (var i = 0; i < nodes.length; i++) {
+      var n = nodes[i];
+      n.theta += n.speed;
+      n.phi += n.phiSpeed;
+      n.pulse += n.pulseSpeed;
+
+      if (n.phi > Math.PI * 0.35) n.phiSpeed = -Math.abs(n.phiSpeed);
+      if (n.phi < -Math.PI * 0.35) n.phiSpeed = Math.abs(n.phiSpeed);
+
+      projected.push(project(n));
+    }
+
+    // Get current effective colors
+    var nodeColor, lineColor;
+    if (themeTransition >= 1) {
+      nodeColor = targetTheme.primary.replace('OPACITY', '0.9');
+      lineColor = targetTheme.primary.replace('OPACITY', '0.25');
+    } else {
+      nodeColor = lerpColor(
+        currentTheme.primary.replace('OPACITY', '0.9'),
+        targetTheme.primary.replace('OPACITY', '0.9'),
+        themeTransition
+      );
+      lineColor = lerpColor(
+        currentTheme.primary.replace('OPACITY', '0.25'),
+        targetTheme.primary.replace('OPACITY', '0.25'),
+        themeTransition
+      );
+    }
+
+    // Draw connecting lines
+    for (var i = 0; i < projected.length; i++) {
+      for (var j = i + 1; j < projected.length; j++) {
+        var dx = projected[i].x - projected[j].x;
+        var dy = projected[i].y - projected[j].y;
+        var dist = Math.sqrt(dx * dx + dy * dy);
+
+        if (dist < MAX_DIST) {
+          var alpha = (1 - dist / MAX_DIST) * 0.5;
+          var zAvg = (projected[i].scale + projected[j].scale) / 2;
+          alpha *= zAvg;
+
+          ctx.beginPath();
+          ctx.moveTo(projected[i].x, projected[i].y);
+          ctx.lineTo(projected[j].x, projected[j].y);
+          ctx.strokeStyle = lineColor.replace(/[\d.]+\)$/, (alpha * 0.25).toFixed(2) + ')');
+          ctx.lineWidth = 0.5;
+          ctx.stroke();
+        }
+      }
+    }
+
+    // Draw nodes
+    for (var i = 0; i < projected.length; i++) {
+      var p = projected[i];
+      var n = nodes[i];
+      var pulseSize = n.size * (1 + 0.3 * Math.sin(n.pulse));
+      var nodeAlpha = 0.5 + 0.5 * p.scale;
+
+      // Glow halo
+      var glowGrad = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, pulseSize * 3);
+      glowGrad.addColorStop(0, nodeColor.replace(/[\d.]+\)$/, (nodeAlpha * 0.4).toFixed(2) + ')'));
+      glowGrad.addColorStop(1, 'rgba(0,0,0,0)');
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, pulseSize * 3, 0, Math.PI * 2);
+      ctx.fillStyle = glowGrad;
+      ctx.fill();
+
+      // Core dot
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, pulseSize * p.scale, 0, Math.PI * 2);
+      ctx.fillStyle = nodeColor.replace(/[\d.]+\)$/, nodeAlpha.toFixed(2) + ')');
+      ctx.fill();
+    }
+
+    requestAnimationFrame(animate);
+  }
+
+  // ── Public API: change theme ──
+  window.setNetworkAnimationTheme = function(networkType) {
+    var theme = themes[networkType] || themes['Unknown'];
+    if (theme.name === targetTheme.name) return;
+    currentTheme = targetTheme;
+    targetTheme = theme;
+    themeTransition = 0;
+  };
+
+  // ── Debounced resize for orientation changes on mobile ──
+  var resizeTimeout;
+  function debouncedResize() {
+    if (resizeTimeout) clearTimeout(resizeTimeout);
+    resizeTimeout = setTimeout(resize, 100);
+  }
+
+  // ── Start ──
+  resize();
+  window.addEventListener('resize', debouncedResize);
+  window.addEventListener('orientationchange', debouncedResize);
+  // visualViewport fires on mobile keyboard open/close and address bar show/hide
+  if (window.visualViewport) {
+    window.visualViewport.addEventListener('resize', debouncedResize);
+  }
+  animate();
+})();
+
+// ── PANEL SWITCHING (tap, no swipe) ──
+function switchPanel(panelId) {
+  document.querySelectorAll('.panel').forEach(function(p){ p.classList.remove('active'); });
+  document.querySelectorAll('.nav-item').forEach(function(n){ n.classList.remove('active'); });
+  var panel = document.getElementById(panelId);
+  if (panel) panel.classList.add('active');
+  var navItem = document.querySelector('[data-panel="'+panelId+'"]');
+  if (navItem) {
+    navItem.classList.add('active');
+    // Bounce animation on tap
+    navItem.classList.add('nav-bounce');
+    setTimeout(function(){ navItem.classList.remove('nav-bounce'); }, 500);
+  }
+  // Request data when switching
+  if (panelId === 'panelHome') requestHomeData();
+  if (panelId === 'panelHistory') {
+    requestHistory();
+    requestDataUsage();
+  }
+}
+
+function switchHistoryView(view) {
+  if (view === 'dataUsage') {
+    document.getElementById('tabDataUsage').classList.add('active');
+    document.getElementById('tabAreaTest').classList.remove('active');
+    document.getElementById('historyDataUsageContent').style.display = 'block';
+    document.getElementById('historyAreaTestContent').style.display = 'none';
+    requestDataUsage();
+  } else {
+    document.getElementById('tabAreaTest').classList.add('active');
+    document.getElementById('tabDataUsage').classList.remove('active');
+    document.getElementById('historyAreaTestContent').style.display = 'block';
+    document.getElementById('historyDataUsageContent').style.display = 'none';
+    requestHistory();
+  }
+}
+
+// ── TOAST ──
+function showToast(msg, type) {
+  var t = document.querySelector('.toast'); if (t) t.remove();
+  var el = document.createElement('div');
+  el.className = 'toast ' + (type||'');
+  el.textContent = msg;
+  document.body.appendChild(el);
+  setTimeout(function(){ el.classList.add('out'); setTimeout(function(){ el.remove(); },250); },2200);
+}
+
+// ── REFRESH ──
+function refreshData() {
+  requestHomeData();
+  showToast('Refreshed', 'success');
+}
+
+// ═══════════════════════════════════════════
+// HOME PANEL LOGIC
+// ═══════════════════════════════════════════
+
+function requestHomeData() {
+  // Try AndroidBridge first (has all methods), fall back to Android (LegacyJsInterface)
+  var bridge = window.AndroidBridge || window.Android;
+  if (bridge) {
+    if (bridge.getCurrentSpeed) bridge.getCurrentSpeed();
+    if (bridge.getDataUsage) bridge.getDataUsage();
+    if (bridge.getNetworkInfo) bridge.getNetworkInfo();
+  }
+}
+
+window.onSpeedUpdate = function(speedJson) {
+  var s = typeof speedJson === 'string' ? JSON.parse(speedJson) : speedJson;
+  var dl = document.getElementById('liveDownload');
+  var ul = document.getElementById('liveUpload');
+  var ping = document.getElementById('livePing');
+  if (!dl && !ul && !ping) return; // Guard: DOM not ready yet
+  if (s.downloadSpeed !== undefined) {
+    var unit = (s.unit || '').toLowerCase();
+    var kbps = unit === 'mbps' ? s.downloadSpeed * 1024 : (unit === 'mb/s' ? s.downloadSpeed * 8192 : s.downloadSpeed);
+    var scaled = formatSpeedAuto(kbps);
+    if (dl) dl.textContent = s.downloadSpeed > 0 ? scaled.value : '--';
+    var unitEl = document.getElementById('homeSpeedUnit');
+    if (unitEl) unitEl.textContent = s.downloadSpeed > 0 ? scaled.unit : '';
+    updateHomeArc(s.downloadSpeed, s.unit);
+  }
+  if (s.uploadSpeed !== undefined) {
+    var unit = (s.unit || '').toLowerCase();
+    var ukbps = unit === 'mbps' ? s.uploadSpeed * 1024 : (unit === 'mb/s' ? s.uploadSpeed * 8192 : s.uploadSpeed);
+    var uscaled = formatSpeedAuto(ukbps);
+    if (ul) ul.textContent = ukbps > 0 ? uscaled.value : '--';
+  }
+  if (s.ping !== undefined && s.ping > 0 && ping) {
+    ping.textContent = s.ping;
+  }
+};
+
+function formatSpeedAuto(kbps) {
+  if (kbps < 1) return { value: Math.round(kbps * 1024).toString(), unit: 'b' };
+  if (kbps < 1000) return { value: Math.round(kbps).toString(), unit: 'kb' };
+  return { value: (kbps / 1024).toFixed(1), unit: 'mb' };
+}
+
+function updateHomeArc(speed, unit) {
+  var maxSpeed = (unit === 'kbps' ? 10000 : 200);
+  var fraction = Math.min(speed / maxSpeed, 1);
+  var arcLength = fraction * 345;
+  var arc = document.getElementById('homeArc');
+  if (arc) arc.setAttribute('stroke-dasharray', arcLength + ' 400');
+}
+
+window.onDataUsageUpdate = function(usageJson) {
+  var u = typeof usageJson === 'string' ? JSON.parse(usageJson) : usageJson;
+  var el = document.getElementById('totalUsage');
+  var unitEl = document.getElementById('usageUnit');
+  if (!el || !unitEl) return; // Guard: DOM not ready yet
+  if (u.totalData !== undefined) {
+    // totalData is in MB from DataUsageTracker
+    var mb = u.totalData;
+    if (mb >= 1024) { el.textContent = (mb / 1024).toFixed(1); unitEl.textContent = 'GB'; }
+    else { el.textContent = mb.toFixed(1); unitEl.textContent = 'MB'; }
+  }
+};
+window.onDataUsageResult = window.onDataUsageUpdate;
+
+window.onNetworkInfo = function(infoJson) {
+  var info = typeof infoJson === 'string' ? JSON.parse(infoJson) : infoJson;
+  var ct = document.getElementById('connectionType');
+  var ss = document.getElementById('signalStrength');
+  if (ct) ct.textContent = info.connectionType || '--';
+  if (ss) ss.textContent = info.signalStrength || '--';
+  // Trigger 3D background animation theme change
+  if (info.connectionType && window.setNetworkAnimationTheme) {
+    window.setNetworkAnimationTheme(info.connectionType);
+  }
+};
+
+window.backendReady = function() { requestHomeData(); };
+
+// ═══════════════════════════════════════════
+// TEST PANEL LOGIC
+// ═══════════════════════════════════════════
+
+var testRunning = false, lastResult = null, graphData = [], selectedServerId = 'cloudflare';
+var MAX_GRAPH_POINTS = 80;
+
+var DEFAULT_SERVERS = [
+  { id:'cloudflare', name:'Cloudflare', location:'Global CDN' },
+  { id:'google', name:'Google', location:'Global' },
+  { id:'netflix', name:'Netflix', location:'Global' },
+  { id:'azure', name:'Azure', location:'Global' }
+];
+
+function initServerChips(servers) {
+  var html = '';
+  for (var i=0; i<servers.length; i++) {
+    var s = servers[i];
+    var active = s.id === selectedServerId ? ' active' : '';
+    html += '<button class="server-chip'+active+'" onclick="selectServer(\''+s.id+'\')" id="chip-'+s.id+'">'+s.name+'</button>';
+  }
+  document.getElementById('serverChips').innerHTML = html;
+}
+
+function selectServer(id) {
+  selectedServerId = id;
+  var chips = document.querySelectorAll('.server-chip');
+  for (var i=0; i<chips.length; i++) chips[i].classList.remove('active');
+  var c = document.getElementById('chip-'+id);
+  if (c) c.classList.add('active');
+  if (window.AndroidBridge) window.AndroidBridge.selectServer(id);
+}
+
+initServerChips(DEFAULT_SERVERS);
+
+function setGauge(speed, max) {
+  max = max || 200;
+  var fraction = Math.min(speed/max, 1);
+  var angle = -90 + fraction*180;
+  var needle = document.getElementById('testNeedle');
+  var arc = document.getElementById('testArc');
+  if (needle) needle.style.transform = 'rotate('+angle+'deg)';
+  if (arc) arc.setAttribute('stroke-dasharray', (fraction*345)+' 400');
+}
+
+function resetGauge() {
+  var needle = document.getElementById('testNeedle');
+  var arc = document.getElementById('testArc');
+  if (needle) needle.style.transform = 'rotate(-90deg)';
+  if (arc) arc.setAttribute('stroke-dasharray', '0 400');
+  document.getElementById('speedValue').textContent = '--';
+  document.getElementById('speedUnit').textContent = 'Mbps';
+  document.getElementById('stageLabel').textContent = 'Ready';
+}
+
+function setStage(stage) {
+  var dots = {ping:'dotPing',download:'dotDownload',upload:'dotUpload'};
+  var order = ['ping','download','upload'];
+  for (var i=0; i<order.length; i++) {
+    var d = document.getElementById(dots[order[i]]);
+    d.classList.remove('active','done');
+    d.style.background = 'rgba(255,255,255,0.1)';
+  }
+  var idx = order.indexOf(stage);
+  for (var j=0; j<order.length; j++) {
+    var dot = document.getElementById(dots[order[j]]);
+    if (j < idx) { dot.classList.add('done'); dot.style.background = '#00dfc1'; dot.style.opacity = '0.5'; }
+    else if (j === idx) { dot.classList.add('active'); dot.style.background = '#00dfc1'; dot.style.opacity = '1'; }
+  }
+}
+
+function initGraph() { graphData = []; drawGraph(); }
+
+function addGraphPoint(speed) {
+  graphData.push(speed);
+  if (graphData.length > MAX_GRAPH_POINTS) graphData.shift();
+  drawGraph();
+}
+
+function drawGraph() {
+  var canvas = document.getElementById('speedGraph');
+  if (!canvas) return;
+  var ctx = canvas.getContext('2d');
+  var w = canvas.width, h = canvas.height;
+  ctx.clearRect(0,0,w,h);
+  if (graphData.length < 2) return;
+  var maxVal = Math.max.apply(null, graphData.concat([1]));
+  var pad = {top:8,right:8,bottom:16,left:8};
+  var pw = w-pad.left-pad.right, ph = h-pad.top-pad.bottom;
+  // Grid
+  ctx.strokeStyle = 'rgba(255,255,255,0.04)'; ctx.lineWidth = 1;
+  for (var i=0; i<=4; i++) {
+    var gy = pad.top + (ph/4)*i;
+    ctx.beginPath(); ctx.moveTo(pad.left,gy); ctx.lineTo(w-pad.right,gy); ctx.stroke();
+  }
+  // Fill
+  var grad = ctx.createLinearGradient(0,pad.top,0,h-pad.bottom);
+  grad.addColorStop(0,'rgba(0,223,193,0.2)'); grad.addColorStop(1,'rgba(0,223,193,0.01)');
+  ctx.beginPath(); ctx.moveTo(pad.left, h-pad.bottom);
+  for (var j=0; j<graphData.length; j++) {
+    var x = pad.left + (j/(MAX_GRAPH_POINTS-1))*pw;
+    var y = pad.top + ph - (graphData[j]/maxVal)*ph;
+    ctx.lineTo(x,y);
+  }
+  ctx.lineTo(pad.left+((graphData.length-1)/(MAX_GRAPH_POINTS-1))*pw, h-pad.bottom);
+  ctx.closePath(); ctx.fillStyle = grad; ctx.fill();
+  // Line
+  ctx.beginPath(); ctx.strokeStyle = '#00dfc1'; ctx.lineWidth = 2;
+  ctx.shadowColor = 'rgba(0,223,193,0.5)'; ctx.shadowBlur = 4;
+  for (var k=0; k<graphData.length; k++) {
+    var lx = pad.left + (k/(MAX_GRAPH_POINTS-1))*pw;
+    var ly = pad.top + ph - (graphData[k]/maxVal)*ph;
+    if (k===0) ctx.moveTo(lx,ly); else ctx.lineTo(lx,ly);
+  }
+  ctx.stroke(); ctx.shadowBlur = 0;
+}
+
+function startTest() {
+  if (testRunning) return;
+  testRunning = true;
+  resetGauge(); initGraph();
+  document.getElementById('resultsCard').style.display = 'none';
+  document.getElementById('errorBanner').style.display = 'none';
+  document.getElementById('graphContainer').style.display = 'block';
+  document.getElementById('btnStart').style.display = 'none';
+  document.getElementById('btnCancel').style.display = 'flex';
+  document.getElementById('serverChips').style.display = 'none';
+  setStage('ping');
+  document.getElementById('stageLabel').textContent = 'Pinging...';
+  document.getElementById('speedUnit').textContent = 'ms';
+  var bridge = window.AndroidBridge || window.Android;
+  if (bridge && bridge.startSpeedTest) {
+    if (bridge.selectServer) bridge.selectServer(selectedServerId);
+    bridge.startSpeedTest();
+  } else {
+    testRunning = false;
+    document.getElementById('errorBanner').style.display = 'block';
+    document.getElementById('errorBanner').textContent = 'Real speed test engine is not ready. Please reopen the app and try again.';
+    resetUI();
+  }
+}
+
+function cancelTest() {
+  if (window.AndroidBridge) window.AndroidBridge.cancelSpeedTest();
+  resetUI();
+}
+
+function retryTest() {
+  document.getElementById('resultsCard').style.display = 'none';
+  document.getElementById('errorBanner').style.display = 'none';
+  startTest();
+}
+
+function resetUI() {
+  testRunning = false;
+  resetGauge();
+  document.getElementById('btnStart').style.display = 'flex';
+  document.getElementById('btnCancel').style.display = 'none';
+  document.getElementById('graphContainer').style.display = 'none';
+  document.getElementById('serverChips').style.display = 'flex';
+  var dots = document.querySelectorAll('.stage-dot');
+  for (var i=0; i<dots.length; i++) {
+    dots[i].classList.remove('active','done');
+    dots[i].style.background = 'rgba(255,255,255,0.1)';
+    dots[i].style.opacity = '1';
+  }
+}
+
+// Bridge callbacks
+window.onSpeedTestProgress = function(progressJson) {
+  var p = typeof progressJson === 'string' ? JSON.parse(progressJson) : progressJson;
+  switch(p.stage) {
+    case 'ping':
+      setStage('ping');
+      document.getElementById('stageLabel').textContent = 'Pinging...';
+      document.getElementById('speedUnit').textContent = 'ms';
+      document.getElementById('speedValue').textContent = p.pingMs;
+      setGauge(Math.min(p.pingMs,200), 200);
+      break;
+    case 'download':
+      setStage('download');
+      document.getElementById('stageLabel').textContent = 'Downloading';
+      document.getElementById('speedUnit').textContent = 'Mbps';
+      document.getElementById('speedValue').textContent = Math.round(p.currentSpeed);
+      setGauge(p.currentSpeed, 200);
+      addGraphPoint(p.currentSpeed);
+      break;
+    case 'upload':
+      setStage('upload');
+      document.getElementById('stageLabel').textContent = 'Uploading';
+      document.getElementById('speedUnit').textContent = 'Mbps';
+      document.getElementById('speedValue').textContent = Math.round(p.currentSpeed);
+      setGauge(p.currentSpeed, 100);
+      addGraphPoint(p.currentSpeed);
+      break;
+  }
+};
+
+window.onSpeedTestResult = function(resultJson) {
+  var r = typeof resultJson === 'string' ? JSON.parse(resultJson) : resultJson;
+  lastResult = r; testRunning = false;
+  if (r.error) {
+    document.getElementById('errorBanner').style.display = 'block';
+    document.getElementById('errorBanner').textContent = r.error;
+    resetUI(); return;
+  }
+  setGauge(r.downloadResult, 200);
+  document.getElementById('speedValue').textContent = Math.round(r.downloadResult);
+  document.getElementById('speedUnit').textContent = 'Mbps';
+  document.getElementById('stageLabel').textContent = 'Complete';
+  setStage('upload');
+  ['dotPing','dotDownload','dotUpload'].forEach(function(id){
+    var d = document.getElementById(id);
+    d.classList.add('done'); d.style.background = '#00dfc1'; d.style.opacity = '0.5';
+  });
+  document.getElementById('btnCancel').style.display = 'none';
+  document.getElementById('btnStart').style.display = 'flex';
+  document.getElementById('btnStart').innerHTML = '<svg width="20" height="20" viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg> Test Again';
+  showResults(r);
+};
+
+window.onSpeedTestCancelled = function() { testRunning = false; resetUI(); };
+
+function showResults(r) {
+  document.getElementById('resDownload').textContent = r.downloadResult.toFixed(1);
+  document.getElementById('resUpload').textContent = r.uploadResult.toFixed(1);
+  document.getElementById('resPing').textContent = r.pingScore;
+  document.getElementById('resJitter').textContent = (r.jitter||0).toFixed(1);
+  var grade = getGrade(r.downloadResult, r.pingScore, r.jitter||0, r.packetLoss||0);
+  var ge = document.getElementById('resultGrade');
+  ge.textContent = grade.label;
+  ge.style.background = grade.bg; ge.style.color = grade.color;
+  document.getElementById('resultsCard').style.display = 'block';
+}
+
+function getGrade(dl, ping, jitter, loss) {
+  if (dl>=100 && ping<20 && jitter<5 && loss<0.5) return {label:'Excellent',bg:'rgba(0,223,193,0.15)',color:'#00dfc1'};
+  if (dl>=50 && ping<50 && jitter<15 && loss<2) return {label:'Good',bg:'rgba(0,223,193,0.1)',color:'#00dfc1'};
+  if (dl>=20 && ping<100 && jitter<30 && loss<5) return {label:'Fair',bg:'rgba(255,180,0,0.15)',color:'#ffb400'};
+  return {label:'Poor',bg:'rgba(255,107,107,0.15)',color:'#ff6b6b'};
+}
+
+function shareResult() {
+  if (!lastResult) return;
+  if (window.AndroidBridge) { window.AndroidBridge.shareResult(JSON.stringify(lastResult)); return; }
+  var text = 'Speed Test: '+lastResult.downloadResult.toFixed(1)+'/'+lastResult.uploadResult.toFixed(1)+' Mbps | Ping: '+lastResult.pingScore+'ms';
+  if (navigator.share) navigator.share({title:'Speed Test',text:text});
+  else showToast(text, 'success');
+}
+
+// Browser simulation
+function simulateTest() {
+  var stages = [
+    {stage:'ping',dur:2000,pingMs:function(){return 15+Math.random()*30}},
+    {stage:'download',dur:5000,speed:function(){return 30+Math.random()*80}},
+    {stage:'upload',dur:4000,speed:function(){return 5+Math.random()*25}}
+  ];
+  var si=0, st=Date.now();
+  function tick() {
+    if (!testRunning) return;
+    var s=stages[si], elapsed=Date.now()-st, stageStart=0;
+    for (var i=0;i<si;i++) stageStart+=stages[i].dur;
+    var prog=Math.min((elapsed-stageStart)/s.dur,1);
+    if (s.stage==='ping') window.onSpeedTestProgress({stage:'ping',progress:prog,pingMs:Math.round(s.pingMs())});
+    else window.onSpeedTestProgress({stage:s.stage,progress:prog,currentSpeed:s.speed()});
+    if (prog>=1) { si++; if (si>=stages.length) {
+      window.onSpeedTestResult({downloadResult:55+Math.random()*40,uploadResult:8+Math.random()*20,pingScore:18+Math.floor(Math.random()*25),jitter:2+Math.random()*8,packetLoss:Math.random()*1.5,ispName:'Simulated ISP',connectionType:'WiFi',serverLocation:'Local'});
+      return;
+    }}
+    setTimeout(tick,150);
+  }
+  tick();
+}
+
+// ═══════════════════════════════════════════
+// HISTORY PANEL LOGIC
+// ═══════════════════════════════════════════
+
+var DELETED_HISTORY_KEY = 'netspeed_deleted_history_timestamps';
+
+function getDeletedHistorySet() {
+  try {
+    var saved = JSON.parse(localStorage.getItem(DELETED_HISTORY_KEY) || '[]');
+    var set = {};
+    for (var i = 0; i < saved.length; i++) set[String(saved[i])] = true;
+    return set;
+  } catch (e) {
+    return {};
+  }
+}
+
+function rememberDeletedHistory(timestamps) {
+  try {
+    var set = getDeletedHistorySet();
+    for (var i = 0; i < timestamps.length; i++) set[String(timestamps[i])] = true;
+    localStorage.setItem(DELETED_HISTORY_KEY, JSON.stringify(Object.keys(set)));
+  } catch (e) {}
+}
+
+function filterDeletedHistoryRows(data) {
+  var deleted = getDeletedHistorySet();
+  var filtered = [];
+  for (var i = 0; i < (data || []).length; i++) {
+    if (!deleted[String(data[i].timestamp)]) filtered.push(data[i]);
+  }
+  return filtered;
+}
+
+var DELETED_DATA_USAGE_KEY = 'netspeed_deleted_data_usage_dates';
+
+function getDeletedDataUsageSet() {
+  try {
+    var saved = JSON.parse(localStorage.getItem(DELETED_DATA_USAGE_KEY) || '[]');
+    var set = {};
+    for (var i = 0; i < saved.length; i++) set[String(saved[i])] = true;
+    return set;
+  } catch (e) {
+    return {};
+  }
+}
+
+function rememberDeletedDataUsage(dates) {
+  try {
+    var set = getDeletedDataUsageSet();
+    for (var i = 0; i < (dates || []).length; i++) {
+      if (dates[i]) set[String(dates[i])] = true;
+    }
+    localStorage.setItem(DELETED_DATA_USAGE_KEY, JSON.stringify(Object.keys(set)));
+  } catch (e) {}
+}
+
+function filterDeletedDataUsageRows(data) {
+  var deleted = getDeletedDataUsageSet();
+  var filtered = [];
+  for (var i = 0; i < (data || []).length; i++) {
+    if (!deleted[String(data[i].date)]) filtered.push(data[i]);
+  }
+  return filtered;
+}
+
+function requestHistory() {
+  // Immediately clear list to prevent stale data flash
+  var list = document.getElementById('historyList');
+  if (list) list.innerHTML = '';
+  var summary = document.getElementById('summarySection');
+  if (summary) summary.style.display = 'none';
+  
+  // Try AndroidBridge first, fall back to Android (LegacyJsInterface)
+  var bridge = window.AndroidBridge || window.Android;
+  if (bridge && bridge.getHistory) {
+    bridge.getHistory();
+  } else {
+    // Show empty state — no demo/hardcoded data
+    window.onHistoryResult([]);
+  }
+}
+
+window.onHistoryResult = function(historyJson) {
+  var data = typeof historyJson === 'string' ? JSON.parse(historyJson) : historyJson;
+  data = filterDeletedHistoryRows(data || []);
+  var empty = document.getElementById('emptyState');
+  var summary = document.getElementById('summarySection');
+  var list = document.getElementById('historyList');
+
+  // Immediately clear any stale content to prevent glitch
+  list.innerHTML = '';
+
+  if (!data || data.length === 0) {
+    empty.style.display = 'flex';
+    summary.style.display = 'none';
+    // Reset edit mode on empty to prevent stale state
+    isAreaEditMode = false;
+    selectedItems.area = [];
+    updateDeleteBar('area');
+    var editBtn = document.getElementById('btnEditHistory');
+    if (editBtn) { editBtn.style.background = 'rgba(255,255,255,0.05)'; editBtn.style.color = 'var(--primary)'; }
+    return;
+  }
+
+  empty.style.display = 'none';
+  summary.style.display = 'block';
+
+  // Summary
+  var sd = 0, su = 0, sp = 0, count = data.length;
+  for (var i = 0; i < count; i++) {
+    sd += data[i].downloadResult;
+    su += data[i].uploadResult;
+    sp += data[i].pingScore;
+  }
+  document.getElementById('avgDownload').textContent = (sd / count).toFixed(1);
+  document.getElementById('avgUpload').textContent = (su / count).toFixed(1);
+  document.getElementById('avgPing').textContent = Math.round(sp / count);
+
+  // List — build all HTML in one go then set innerHTML once
+  var html = '';
+  var editClass = isAreaEditMode ? ' edit-mode' : '';
+  for (var j = 0; j < count; j++) {
+    var item = data[j];
+    var grade = getGrade(item.downloadResult, item.pingScore, item.jitter || 0, item.packetLoss || 0);
+    var date = formatDate(item.timestamp);
+    var time = new Date(item.timestamp).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+    var isChecked = selectedItems.area.indexOf(item.timestamp) !== -1;
+    var chkClass = isChecked ? ' checked' : '';
+
+    html += '<div class="history-item' + editClass + '" onclick="handleItemClick(event, \'area\', ' + item.timestamp + ')">' +
+      '<div class="history-delete-icon" onclick="deleteSingleHistory(event, ' + item.timestamp + ')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></div>' +
+      '<div class="history-checkbox-wrap"><div class="custom-chk' + chkClass + '"></div></div>' +
+      '<div class="history-icon"><svg viewBox="0 0 24 24"><path d="M1 21h22M1 7h22M1 14h22"/></svg></div>' +
+      '<div class="history-info"><div class="h-isp">' + (item.ispName || 'Unknown') + '</div><div class="h-meta">' + date + ' · ' + time + ' · ' + (item.connectionType || 'Unknown') + '</div></div>' +
+      '<span class="history-grade-badge" style="background:' + grade.bg + ';color:' + grade.color + '">' + grade.label + '</span>' +
+      '<div class="history-speed"><span class="h-dl">' + item.downloadResult.toFixed(0) + '</span><br><span class="h-ul">' + item.uploadResult.toFixed(0) + ' ↑</span></div>' +
+    '</div>';
+  }
+  list.innerHTML = html;
+};
+
+function deleteSingleHistory(event, timestamp) {
+  if (event) event.stopPropagation();
+  if (confirm("Delete this test result?")) {
+    rememberDeletedHistory([timestamp]);
+    var bridge = window.AndroidBridge || window.Android;
+    if (bridge && bridge.deleteHistory) {
+      // Bridge deletes from database; local tombstone keeps refresh/reopen clean.
+      bridge.deleteHistory(JSON.stringify([timestamp]));
+      requestHistory();
+    } else {
+      // Demo mode: remove from UI locally
+      var items = document.querySelectorAll('.history-item');
+      for (var i = 0; i < items.length; i++) {
+        var icon = items[i].querySelector('.history-delete-icon');
+        if (icon && icon.getAttribute('onclick') && icon.getAttribute('onclick').indexOf(String(timestamp)) !== -1) {
+          items[i].remove();
+          break;
+        }
+      }
+    }
+  }
+}
+
+
+function formatDate(ts) {
+  var d = new Date(ts), now = new Date(), diff = now-d;
+  if (diff<60000) return 'Just now';
+  if (diff<3600000) return Math.floor(diff/60000)+'m ago';
+  if (diff<86400000) return Math.floor(diff/3600000)+'h ago';
+  if (diff<604800000) return Math.floor(diff/86400000)+'d ago';
+  return d.toLocaleDateString('en-US',{month:'short',day:'numeric'});
+}
+
+// ═══════════════════════════════════════════
+// DATA USAGE PANEL LOGIC
+// ═══════════════════════════════════════════
+
+var currentDataTab = 'daily';
+var dataHistoryCache = [];
+var dataUsageRequestSeq = 0;
+
+function requestDataUsage() {
+  dataUsageRequestSeq++;
+  // Clear stale content immediately to prevent glitch
+  var list = document.getElementById('dataList');
+  if (list) list.innerHTML = '';
+
+  // Try AndroidBridge first, fall back to Android (LegacyJsInterface)
+  var bridge = window.AndroidBridge || window.Android;
+  if (bridge && bridge.getDataUsageHistory) {
+    // Monthly needs enough raw daily rows to form real month groups.
+    var days = currentDataTab === 'daily' ? 7 : (currentDataTab === 'weekly' ? 56 : 180);
+    bridge.getDataUsageHistory(days);
+  } else {
+    // Show empty state — no demo/hardcoded data
+    window.onDataUsageHistory([]);
+  }
+}
+
+function switchDataTab(tab) {
+  currentDataTab = tab;
+  isDataEditMode = false;
+  selectedItems.data = [];
+  updateDeleteBar('data');
+
+  var tabs = document.querySelectorAll('#dataTabs .data-tab');
+  for (var i = 0; i < tabs.length; i++) {
+    tabs[i].classList.remove('active');
+    if (tabs[i].getAttribute('data-tab') === tab) tabs[i].classList.add('active');
+  }
+
+  var editBtn = document.getElementById('btnEditData');
+  if (editBtn) { editBtn.style.background = 'rgba(255,255,255,0.05)'; editBtn.style.color = 'var(--primary)'; }
+
+  // Re-render cached rows immediately, then refresh with the required range.
+  renderDataUsageHistory(dataHistoryCache);
+  requestDataUsage();
+}
+
+window.onDataUsageHistory = function(historyJson) {
+  try {
+    var rows = typeof historyJson === 'string' ? JSON.parse(historyJson) : (historyJson || []);
+    dataHistoryCache = filterDeletedDataUsageRows(rows);
+  } catch (e) {
+    dataHistoryCache = [];
+  }
+  renderDataUsageHistory(dataHistoryCache);
+};
+
+function renderDataUsageHistory(rawData) {
+  var data = buildDataUsageView(rawData || [], currentDataTab);
+  var empty = document.getElementById('dataEmpty');
+  var summary = document.getElementById('dataSummary');
+  var chartWrap = document.getElementById('dataChartWrap');
+  var list = document.getElementById('dataList');
+
+  // Clear stale content immediately to prevent glitch
+  list.innerHTML = '';
+
+  if (!data || data.length === 0) {
+    empty.style.display = 'flex';
+    summary.style.display = 'none';
+    chartWrap.style.display = 'none';
+    // Reset edit mode on empty to prevent stale state
+    isDataEditMode = false;
+    selectedItems.data = [];
+    updateDeleteBar('data');
+    var editBtn = document.getElementById('btnEditData');
+    if (editBtn) { editBtn.style.background = 'rgba(255,255,255,0.05)'; editBtn.style.color = 'var(--primary)'; }
+    return;
+  }
+
+  empty.style.display = 'none';
+  summary.style.display = 'flex';
+  chartWrap.style.display = 'block';
+
+  // Summary cards should show only the selected period, not the full list total.
+  var count = data.length;
+  var summaryItem = getCurrentDataSummary(data, currentDataTab);
+  var totalMobile = summaryItem.mobileData || 0;
+  var totalWifi = summaryItem.wifiData || 0;
+  var totalAll = totalMobile + totalWifi;
+
+  // Update summary cards
+  document.getElementById('dataMobile').textContent = formatDataSize(totalMobile);
+  document.getElementById('dataWifi').textContent = formatDataSize(totalWifi);
+  document.getElementById('dataTotal').textContent = formatDataSize(totalAll);
+
+  // Draw bar chart
+  drawDataChart(data);
+
+  // Build list
+  var html = '';
+  var editClass = isDataEditMode ? ' edit-mode' : '';
+  for (var j = 0; j < count; j++) {
+    var item = data[j];
+    var label = formatDataLabel(item.date, currentDataTab);
+    var total = item.totalData || 0;
+    var mobile = item.mobileData || 0;
+    var wifi = item.wifiData || 0;
+    var itemId = item.id || item.date;
+    var isChecked = selectedItems.data.indexOf(itemId) !== -1;
+    var chkClass = isChecked ? ' checked' : '';
+
+    html += '<div class="data-list-item' + editClass + '" onclick="handleItemClick(event, \'data\', \'' + itemId + '\')">' +
+      '<div class="data-delete-icon" onclick="deleteSingleDataUsage(event, \'' + itemId + '\')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></div>' +
+      '<div class="data-checkbox-wrap"><div class="custom-chk' + chkClass + '"></div></div>' +
+      '<div class="dli-main">' +
+        '<div class="dli-top">' +
+          '<span class="dli-label">' + label + '</span>' +
+          '<span class="dli-val">' + formatDataSize(total) + '</span>' +
+        '</div>' +
+        '<div class="dli-bar-wrap">' +
+          '<div class="dli-bar" style="width:' + Math.min((total / (totalAll || 1)) * 100, 100) + '%"></div>' +
+        '</div>' +
+        '<div class="dli-detail">' +
+          '<span class="dli-mobile">📱 ' + formatDataSize(mobile) + '</span>' +
+          '<span class="dli-wifi">📶 ' + formatDataSize(wifi) + '</span>' +
+        '</div>' +
+      '</div>' +
+    '</div>';
+  }
+  list.innerHTML = html;
+}
+
+function buildDataUsageView(history, tab) {
+  var rows = (history || []).slice().sort(function(a, b) {
+    return String(b.date || '').localeCompare(String(a.date || ''));
+  });
+  if (tab === 'daily') {
+    return rows.slice(0, 7).map(function(item) {
+      return {
+        id: item.date,
+        date: item.date,
+        dates: [item.date],
+        mobileData: item.mobileData || 0,
+        wifiData: item.wifiData || 0,
+        totalData: (item.mobileData || 0) + (item.wifiData || 0)
+      };
+    });
+  }
+
+  var grouped = {};
+  for (var i = 0; i < rows.length; i++) {
+    var item = rows[i];
+    if (!item.date) continue;
+    var key = tab === 'weekly' ? getWeekKey(item.date) : item.date.slice(0, 7);
+    if (!grouped[key]) {
+      grouped[key] = { id: key, date: item.date, dates: [], mobileData: 0, wifiData: 0, totalData: 0 };
+    }
+    grouped[key].dates.push(item.date);
+    grouped[key].date = grouped[key].date < item.date ? grouped[key].date : item.date;
+    grouped[key].mobileData += item.mobileData || 0;
+    grouped[key].wifiData += item.wifiData || 0;
+  }
+
+  var result = Object.keys(grouped).map(function(key) {
+    grouped[key].totalData = grouped[key].mobileData + grouped[key].wifiData;
+    return grouped[key];
+  });
+  result.sort(function(a, b) { return String(b.id).localeCompare(String(a.id)); });
+  return result;
+}
+
+function getCurrentDataSummary(data, tab) {
+  if (!data || data.length === 0) return { mobileData: 0, wifiData: 0 };
+
+  var now = new Date();
+  var today = now.getFullYear() + '-' + twoDigit(now.getMonth() + 1) + '-' + twoDigit(now.getDate());
+  var currentId = tab === 'daily' ? today : (tab === 'weekly' ? getWeekKey(today) : today.slice(0, 7));
+
+  for (var i = 0; i < data.length; i++) {
+    if (data[i].id === currentId || data[i].date === currentId) return data[i];
+  }
+
+  return data[0];
+}
+
+function twoDigit(num) {
+  return num < 10 ? '0' + num : String(num);
+}
+
+function getWeekKey(dateStr) {
+  var d = parseDateOnly(dateStr);
+  var day = d.getDay();
+  var diffToMonday = day === 0 ? -6 : 1 - day;
+  d.setDate(d.getDate() + diffToMonday);
+  var y = d.getFullYear();
+  var m = twoDigit(d.getMonth() + 1);
+  var dayNum = twoDigit(d.getDate());
+  return y + '-' + m + '-' + dayNum;
+}
+
+function parseDateOnly(dateStr) {
+  var parts = String(dateStr || '').split('-');
+  if (parts.length >= 3) return new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2]));
+  return new Date(dateStr);
+}
+
+function getDatesForDataId(id) {
+  if (currentDataTab === 'daily') return [id];
+  var view = buildDataUsageView(dataHistoryCache, currentDataTab);
+  for (var i = 0; i < view.length; i++) {
+    if (view[i].id === id) return view[i].dates || [];
+  }
+  return [id];
+}
+
+function formatDataSize(bytes) {
+  if (!bytes || bytes === 0) return '0 B';
+  if (bytes < 1024) return bytes + ' B';
+  if (bytes < 1048576) return (bytes / 1024).toFixed(1) + ' KB';
+  if (bytes < 1073741824) return (bytes / 1048576).toFixed(1) + ' MB';
+  return (bytes / 1073741824).toFixed(2) + ' GB';
+}
+
+function formatDataLabel(dateStr, tab) {
+  if (!dateStr) return '--';
+  var d = parseDateOnly(dateStr);
+  var months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  if (tab === 'daily') {
+    var days = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+    return days[d.getDay()] + ' ' + d.getDate();
+  }
+  if (tab === 'weekly') {
+    var end = new Date(d);
+    end.setDate(end.getDate() + 6);
+    return months[d.getMonth()] + ' ' + d.getDate() + ' - ' + months[end.getMonth()] + ' ' + end.getDate();
+  }
+  return months[d.getMonth()] + ' ' + d.getFullYear();
+}
+
+// ═══════════════════════════════════════════
+// DATA USAGE DELETE LOGIC
+// ═══════════════════════════════════════════
+
+function deleteSingleDataUsage(event, date) {
+  if (event) event.stopPropagation();
+  if (confirm("Delete this data usage entry?")) {
+    var datesToDelete = getDatesForDataId(date);
+    rememberDeletedDataUsage(datesToDelete);
+    dataHistoryCache = filterDeletedDataUsageRows(dataHistoryCache);
+    renderDataUsageHistory(dataHistoryCache);
+
+    var bridge = window.AndroidBridge || window.Android;
+    if (bridge && bridge.deleteDataUsageHistory) {
+      // Bridge deletes from database; local tombstone keeps refresh/reopen clean.
+      bridge.deleteDataUsageHistory(JSON.stringify(datesToDelete));
+      requestDataUsage();
+    } else {
+      requestDataUsage();
+    }
+  }
+}
+
+// ═══════════════════════════════════════════
+// SHARED EDIT/SELECTION LOGIC
+// ═══════════════════════════════════════════
+
+var isAreaEditMode = false;
+var isDataEditMode = false;
+var selectedItems = { area: [], data: [] };
+
+function toggleEditMode(type) {
+  if (type === 'area') {
+    isAreaEditMode = !isAreaEditMode;
+    selectedItems.area = [];
+    updateDeleteBar('area');
+    requestHistory();
+    // Update button style
+    var btn = document.getElementById('btnEditHistory');
+    if (isAreaEditMode) {
+      btn.style.background = 'rgba(255,107,107,0.15)';
+      btn.style.color = 'var(--error)';
+    } else {
+      btn.style.background = 'rgba(255,255,255,0.05)';
+      btn.style.color = 'var(--primary)';
+    }
+  } else {
+    isDataEditMode = !isDataEditMode;
+    selectedItems.data = [];
+    updateDeleteBar('data');
+    requestDataUsage();
+    // Update button style
+    var btn = document.getElementById('btnEditData');
+    if (isDataEditMode) {
+      btn.style.background = 'rgba(255,107,107,0.15)';
+      btn.style.color = 'var(--error)';
+    } else {
+      btn.style.background = 'rgba(255,255,255,0.05)';
+      btn.style.color = 'var(--primary)';
+    }
+  }
+}
+
+function handleItemClick(event, type, id) {
+  var inEdit = (type === 'area' ? isAreaEditMode : isDataEditMode);
+  if (!inEdit) return;
+  
+  event.preventDefault();
+  event.stopPropagation();
+  
+  var list = selectedItems[type];
+  var idx = list.indexOf(id);
+  var isNowChecked = false;
+  if (idx === -1) {
+    list.push(id);
+    isNowChecked = true;
+  } else {
+    list.splice(idx, 1);
+    isNowChecked = false;
+  }
+  
+  // Update the checkbox UI directly without re-rendering the whole list
+  var items = document.querySelectorAll(type === 'area' ? '.history-item' : '.data-list-item');
+  for (var i = 0; i < items.length; i++) {
+    // We check the onclick or a data-attribute to identify the item
+    // Since we pass id to handleItemClick, we can check if this item matches
+    var itemOnclick = items[i].getAttribute('onclick');
+    if (itemOnclick && itemOnclick.indexOf(String(id)) !== -1) {
+      var chk = items[i].querySelector('.custom-chk');
+      if (chk) {
+        if (isNowChecked) chk.classList.add('checked');
+        else chk.classList.remove('checked');
+      }
+      break;
+    }
+  }
+  
+  updateDeleteBar(type);
+}
+
+function updateDeleteBar(type) {
+  var btnDelete = document.getElementById(type === 'area' ? 'btnDeleteSelectedHistory' : 'btnDeleteSelectedData');
+  var inEdit = (type === 'area' ? isAreaEditMode : isDataEditMode);
+  var selectedCount = selectedItems[type].length;
+
+  if (inEdit && selectedCount > 0) {
+    btnDelete.style.display = 'block';
+    btnDelete.textContent = 'Delete (' + selectedCount + ')';
+  } else {
+    btnDelete.style.display = 'none';
+  }
+}
+
+function deleteSelected(type) {
+  var list = selectedItems[type];
+  if (list.length === 0) return;
+  
+  if (confirm("Delete " + list.length + " selected items?")) {
+    if (type === 'area') {
+      var bridge = window.AndroidBridge || window.Android;
+      var areaList = list.slice();
+      rememberDeletedHistory(areaList);
+      if (bridge && bridge.deleteHistory) {
+        // Bridge deletes from database; local tombstone keeps refresh/reopen clean.
+        bridge.deleteHistory(JSON.stringify(areaList));
+        isAreaEditMode = false;
+        selectedItems.area = [];
+        // Reset edit button style
+        var btn = document.getElementById('btnEditHistory');
+        if (btn) { btn.style.background = 'rgba(255,255,255,0.05)'; btn.style.color = 'var(--primary)'; }
+        requestHistory();
+      } else {
+        isAreaEditMode = false;
+        selectedItems.area = [];
+        requestHistory();
+      }
+    } else {
+      var dataBridge = window.AndroidBridge || window.Android;
+      var datesToDelete = [];
+      for (var i = 0; i < list.length; i++) {
+        datesToDelete = datesToDelete.concat(getDatesForDataId(list[i]));
+      }
+      datesToDelete = datesToDelete.filter(function(date, idx, arr) { return arr.indexOf(date) === idx; });
+      rememberDeletedDataUsage(datesToDelete);
+      dataHistoryCache = filterDeletedDataUsageRows(dataHistoryCache);
+      isDataEditMode = false;
+      selectedItems.data = [];
+      // Reset edit button style
+      var btn = document.getElementById('btnEditData');
+      if (btn) { btn.style.background = 'rgba(255,255,255,0.05)'; btn.style.color = 'var(--primary)'; }
+      if (dataBridge && dataBridge.deleteDataUsageHistory) {
+        // Bridge deletes from database; local tombstone keeps refresh/reopen clean.
+        dataBridge.deleteDataUsageHistory(JSON.stringify(datesToDelete));
+      }
+      requestDataUsage();
+    }
+    updateDeleteBar(type);
+  }
+}
+
+window.onDataUsageDeleted = function() {
+  showToast('Data usage deleted', 'success');
+  requestDataUsage();
+};
+
+function confirmReset() {
+  if (confirm("Are you sure you want to PERMANENTLY delete ALL data usage and test history? This cannot be undone.")) {
+    if (window.AndroidBridge && window.AndroidBridge.clearAllHistory) {
+      window.AndroidBridge.clearAllHistory();
+    }
+  }
+}
+
+window.onHistoryCleared = function() {
+  try {
+    localStorage.removeItem(DELETED_HISTORY_KEY);
+    localStorage.removeItem(DELETED_DATA_USAGE_KEY);
+  } catch (e) {}
+  showToast('All history cleared', 'success');
+  requestHomeData();
+  requestHistory();
+  requestDataUsage();
+};
+
+function drawDataChart(data) {
+  var canvas = document.getElementById('dataChart');
+  if (!canvas || !data || data.length === 0) return;
+
+  // Use CSS-rendered display size for crisp, correctly-proportioned chart
+  var displayW = canvas.clientWidth || 360;
+  var displayH = canvas.clientHeight || 140;
+  var dpr = window.devicePixelRatio || 1;
+
+  // Set bitmap to match display size × device pixel ratio (prevents blur + squish)
+  canvas.width = displayW * dpr;
+  canvas.height = displayH * dpr;
+
+  var ctx = canvas.getContext('2d');
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  ctx.clearRect(0, 0, displayW, displayH);
+
+  var w = displayW, h = displayH;
+  var pad = { top: 16, right: 12, bottom: 28, left: 12 };
+  var pw = w - pad.left - pad.right;
+  var ph = h - pad.top - pad.bottom;
+
+  // Find max value (use derived mobile+wifi for consistency)
+  var maxVal = 0;
+  for (var i = 0; i < data.length; i++) {
+    var v = ((data[i].mobileData || 0) + (data[i].wifiData || 0)) / (1024 * 1024);
+    if (v > maxVal) maxVal = v;
+  }
+  if (maxVal === 0) maxVal = 1;
+
+  // Grid lines
+  ctx.strokeStyle = 'rgba(255,255,255,0.04)';
+  ctx.lineWidth = 1;
+  for (var g = 0; g <= 3; g++) {
+    var gy = pad.top + (ph / 3) * g;
+    ctx.beginPath();
+    ctx.moveTo(pad.left, gy);
+    ctx.lineTo(w - pad.right, gy);
+    ctx.stroke();
+  }
+
+  // Bars
+  var barGap = 4;
+  var barWidth = Math.max((pw - barGap * (data.length - 1)) / data.length, 4);
+
+  for (var j = 0; j < data.length; j++) {
+    var valMB = ((data[j].mobileData || 0) + (data[j].wifiData || 0)) / (1024 * 1024);
+    var barH = (valMB / maxVal) * ph;
+    var x = pad.left + j * (barWidth + barGap);
+    var y = pad.top + ph - barH;
+
+    // Gradient fill
+    var grad = ctx.createLinearGradient(x, y, x, pad.top + ph);
+    grad.addColorStop(0, 'rgba(0,223,193,0.8)');
+    grad.addColorStop(1, 'rgba(0,223,193,0.15)');
+    ctx.fillStyle = grad;
+
+    // Rounded top
+    var radius = Math.min(barWidth / 2, 4);
+    ctx.beginPath();
+    ctx.moveTo(x, pad.top + ph);
+    ctx.lineTo(x, y + radius);
+    ctx.quadraticCurveTo(x, y, x + radius, y);
+    ctx.lineTo(x + barWidth - radius, y);
+    ctx.quadraticCurveTo(x + barWidth, y, x + barWidth, y + radius);
+    ctx.lineTo(x + barWidth, pad.top + ph);
+    ctx.closePath();
+    ctx.fill();
+  }
+}
+
+// ═══════════════════════════════════════════
+// SETTINGS PANEL LOGIC
+// ═══════════════════════════════════════════
+
+function toggleSetting(key, el) {
+  var isOn = el.classList.contains('on');
+  var newVal = !isOn;
+
+  // Overlay: needs permission check, handled natively
+  if (key === 'overlayEnabled') {
+    if (window.AndroidBridge) window.AndroidBridge.toggleOverlay(newVal);
+    if (newVal) el.classList.add('on'); else el.classList.remove('on');
+    return;
+  }
+
+  // Network Monitor service: start/stop service natively
+  if (key === 'serviceEnabled') {
+    if (window.AndroidBridge) window.AndroidBridge.toggleService(newVal);
+    if (newVal) el.classList.add('on'); else el.classList.remove('on');
+    return;
+  }
+
+  // All other settings: just save preference
+  if (isOn) el.classList.remove('on'); else el.classList.add('on');
+  if (window.AndroidBridge) window.AndroidBridge.saveSettings(key, String(newVal));
+
+  // Handle dark mode toggle locally
+  if (key === 'darkMode') {
+    document.documentElement.setAttribute('data-theme', newVal ? 'dark' : 'light');
+  }
+}
+
+function restartMonitor() {
+  var bridge = window.AndroidBridge || window.Android;
+  if (bridge && bridge.restartMonitorService) {
+    bridge.restartMonitorService();
+  } else if (bridge && bridge.toggleService) {
+    bridge.toggleService(true);
+  }
+  var serviceToggle = document.getElementById('toggleService');
+  if (serviceToggle) serviceToggle.classList.add('on');
+  showToast('Monitor restarted', 'success');
+  setTimeout(requestHomeData, 500);
+}
+
+window.onMonitorRestarted = function() {
+  var serviceToggle = document.getElementById('toggleService');
+  if (serviceToggle) serviceToggle.classList.add('on');
+  showToast('Monitor restarted', 'success');
+  requestHomeData();
+};
+
+function saveSelect(key, value) {
+  if (window.AndroidBridge) window.AndroidBridge.saveSettings(key, value);
+}
+
+function loadSetting(key, toggleId) {
+  if (window.AndroidBridge) {
+    var val = window.AndroidBridge.loadSettings(key);
+    var el = document.getElementById(toggleId);
+    if (el && val === 'true') el.classList.add('on');
+    else if (el) el.classList.remove('on');
+    // Apply theme immediately when loading darkMode
+    if (key === 'darkMode') {
+      document.documentElement.setAttribute('data-theme', val === 'true' ? 'dark' : 'light');
+    }
+  }
+}
+
+// ═══════════════════════════════════════════
+// PERMISSION ONBOARDING LOGIC
+// ═══════════════════════════════════════════
+
+var onboardingState = {
+  active: false,
+  notification: { needed: true, granted: false },
+  usageStats: { needed: false, granted: true }
+};
+
+/** Called by native (Java) with current permission status JSON */
+window.onPermissionStatus = function(statusJson) {
+  var s = typeof statusJson === 'string' ? JSON.parse(statusJson) : statusJson;
+  console.log('onPermissionStatus', s);
+
+  // Populate state before trusting saved onboarding_complete.
+  if (s.notification) {
+    onboardingState.notification.needed = s.notification.needed;
+    onboardingState.notification.granted = s.notification.granted;
+  }
+  if (s.usageStats) {
+    onboardingState.usageStats.needed = s.usageStats.needed;
+    onboardingState.usageStats.granted = s.usageStats.granted;
+  }
+
+  if (s.onboardingComplete && allPermissionsGranted()) {
+    onboardingState.active = false;
+    hideOnboarding();
+    requestHomeData();
+    return;
+  }
+
+  onboardingState.active = true;
+
+  // Only complete automatically when nothing is required on this Android version.
+  if (allPermissionsGranted() && !onboardingState.notification.needed && !onboardingState.usageStats.needed) {
+    completeOnboardingFlow();
+    return;
+  }
+
+  // Show the overlay until every required permission is granted.
+  showOnboarding();
+  updateOnboardingUI();
+};
+
+/** Called by native when a specific permission result comes back */
+window.onPermissionResult = function(type, granted) {
+  console.log('onPermissionResult', type, granted);
+  if (type === 'notification') {
+    onboardingState.notification.granted = granted;
+  }
+  // usageStats doesn't get immediate callback — we poll on resume
+  updateOnboardingUI();
+
+  if (allPermissionsGranted()) {
+    // Small delay for UI to update
+    setTimeout(function() { completeOnboardingFlow(); }, 400);
+  }
+};
+
+/** Called by native when onboarding is fully complete */
+window.onOnboardingComplete = function() {
+  console.log('onOnboardingComplete');
+  hideOnboarding();
+};
+
+/** Show the onboarding overlay and disable the app panels */
+function showOnboarding() {
+  var overlay = document.getElementById('onboardingOverlay');
+  if (overlay) overlay.classList.remove('hidden');
+}
+
+/** Hide the onboarding overlay with animation */
+function hideOnboarding() {
+  var overlay = document.getElementById('onboardingOverlay');
+  if (!overlay) return;
+  if (overlay.classList.contains('hidden')) return;
+  overlay.classList.add('closing');
+  setTimeout(function() {
+    overlay.classList.add('hidden');
+    overlay.classList.remove('closing');
+  }, 300);
+}
+
+/** Update the UI of each permission step */
+function updateOnboardingUI() {
+  var s = onboardingState;
+  var grantedCount = 0;
+  var totalNeeded = 0;
+
+  // Notification
+  if (s.notification.needed) {
+    totalNeeded++;
+    updateStepUI('Notification', s.notification.granted);
+    if (s.notification.granted) grantedCount++;
+  } else {
+    hideStep('Notification');
+  }
+
+  // Usage Stats
+  if (s.usageStats.needed) {
+    totalNeeded++;
+    updateStepUI('UsageStats', s.usageStats.granted);
+    if (s.usageStats.granted) grantedCount++;
+  } else {
+    hideStep('UsageStats');
+  }
+
+  // Update progress bar
+  var pct = totalNeeded > 0 ? (grantedCount / totalNeeded) * 100 : 0;
+  var bar = document.getElementById('onboardProgressBar');
+  if (bar) bar.style.width = pct + '%';
+
+  // Enable/disable complete button
+  var btn = document.getElementById('btnCompleteOnboarding');
+  if (btn) {
+    btn.disabled = !allPermissionsGranted();
+    if (btn.disabled) {
+      btn.style.opacity = '0.5';
+      btn.style.pointerEvents = 'none';
+    } else {
+      btn.style.opacity = '1';
+      btn.style.pointerEvents = 'auto';
+    }
+  }
+}
+
+function updateStepUI(name, granted) {
+  var step = document.getElementById('onboardStep' + name);
+  var status = document.getElementById('status' + name);
+  var btn = document.getElementById('btn' + name);
+
+  if (!step) return;
+
+  if (granted) {
+    step.classList.add('granted');
+    if (status) status.innerHTML = '<span class="onboard-badge badge-granted">Granted</span>';
+    if (btn) btn.style.display = 'none';
+  } else {
+    step.classList.remove('granted');
+    if (status) status.innerHTML = '<span class="onboard-badge badge-pending">Required</span>';
+    if (btn) btn.style.display = '';
+  }
+}
+
+function hideStep(name) {
+  var step = document.getElementById('onboardStep' + name);
+  if (step) step.style.display = 'none';
+}
+
+function allPermissionsGranted() {
+  var s = onboardingState;
+  if (s.notification.needed && !s.notification.granted) return false;
+  if (s.usageStats.needed && !s.usageStats.granted) return false;
+  return true;
+}
+
+/** User taps "Allow" on a specific permission step */
+function onboardRequest(type) {
+  if (type === 'notification') {
+    if (window.Android && window.Android.requestNotificationPermission) {
+      window.Android.requestNotificationPermission();
+    }
+  }
+}
+
+/** User finishes onboarding — notify native to start services */
+function completeOnboardingFlow() {
+  if (!allPermissionsGranted()) {
+    showOnboarding();
+    updateOnboardingUI();
+    return;
+  }
+
+  onboardingState.active = false;
+  updateOnboardingUI();
+
+  // Hide overlay FIRST — before native call may show dialogs
+  hideOnboarding();
+
+  // Refresh home data now that onboarding is done and services are starting
+  requestHomeData();
+
+  // Then tell native to start services (runs async, won't block us)
+  if (window.Android && window.Android.completeOnboarding) {
+    window.Android.completeOnboarding();
+  }
+}
+
+/** Skip onboarding — close overlay but don't start services */
+function skipOnboarding() {
+  hideOnboarding();
+}
+
+/** Re-check permissions when app returns from system settings */
+function recheckPermissions() {
+  if (onboardingState.active) {
+    var needsRecheck = !allPermissionsGranted();
+    if (needsRecheck && window.Android && window.Android.checkPermissionStatus) {
+      setTimeout(function() { window.Android.checkPermissionStatus(); }, 250);
+    }
+  }
+}
+
+window.addEventListener('pageshow', recheckPermissions);
+document.addEventListener('visibilitychange', function() {
+  if (document.visibilityState === 'visible') {
+    recheckPermissions();
+  }
+});
+
+// ═══════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════
+
+document.addEventListener('DOMContentLoaded', function() {
+  // Load settings
+  loadSetting('serviceEnabled','toggleService');
+  loadSetting('overlayEnabled','toggleOverlay');
+  loadSetting('autoStart','toggleAutoStart');
+  loadSetting('darkMode','toggleDarkMode');
+  loadSetting('dataSaver','toggleDataSaver');
+  if (window.AndroidBridge) {
+    var unit = window.AndroidBridge.loadSettings('unitPreference');
+    if (unit) document.getElementById('unitPreference').value = unit;
+    else document.getElementById('unitPreference').value = 'kbps';
+  } else {
+    document.getElementById('unitPreference').value = 'kbps';
+  }
+  // Apply initial theme
+  var darkToggle = document.getElementById('toggleDarkMode');
+  var isDark = darkToggle ? darkToggle.classList.contains('on') : true;
+  document.documentElement.setAttribute('data-theme', isDark ? 'dark' : 'light');
+
+  // Check onboarding status (delayed to let bridge init)
+  setTimeout(function() {
+    if (window.Android && window.Android.checkPermissionStatus) {
+      window.Android.checkPermissionStatus();
+    }
+  }, 300);
+
+  // Request home data
+  requestHomeData();
+  // Fallback: clear skeletons after 5s
+  setTimeout(function(){
+    var dl = document.getElementById('liveDownload');
+    var ul = document.getElementById('liveUpload');
+    if (dl && dl.textContent === '--') dl.textContent = '0.0';
+    if (ul && ul.textContent === '--') ul.textContent = '0.0';
+  }, 5000);
+});
+</script>
+
+</body></html>

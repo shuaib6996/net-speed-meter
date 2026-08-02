@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+
+    <!-- Outer ring -->
+    <path
+        android:fillColor="#00000000"
+        android:strokeColor="#00DFC1"
+        android:strokeWidth="4"
+        android:pathData="M54,24 C37.4,24 24,37.4 24,54 C24,70.6 37.4,84 54,84 C70.6,84 84,70.6 84,54 C84,37.4 70.6,24 54,24 Z" />
+
+    <!-- Speed arc (thick) -->
+    <path
+        android:fillColor="#00000000"
+        android:strokeColor="#00DFC1"
+        android:strokeWidth="6"
+        android:strokeLineCap="round"
+        android:pathData="M30,66 A36,36 0 0,1 78,66" />
+
+    <!-- Needle -->
+    <path
+        android:fillColor="#00000000"
+        android:strokeColor="#00DFC1"
+        android:strokeWidth="3"
+        android:strokeLineCap="round"
+        android:pathData="M54,54 L54,32" />
+
+    <!-- Center dot -->
+    <path
+        android:fillColor="#00DFC1"
+        android:pathData="M54,54 m-5,0 a5,5 0 1,0 10,0 a5,5 0 1,0 -10,0" />
+
+    <!-- Download arrow -->
+    <path
+        android:fillColor="#00000000"
+        android:strokeColor="#00DFC1"
+        android:strokeWidth="3"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round"
+        android:pathData="M54,62 L54,78 M48,72 L54,78 L60,72" />
+
+</vector>

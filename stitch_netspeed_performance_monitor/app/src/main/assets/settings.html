@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" name="viewport"/>
+<title>NetSpeed Meter - Settings</title>
+<link rel="stylesheet" href="styles.css"/>
+<style>
+  body {
+    background-image: radial-gradient(circle at 50% -20%, rgba(0,223,193,0.12), transparent 60%),
+                      radial-gradient(circle at 100% 100%, rgba(0,218,248,0.08), transparent 50%);
+  }
+  .toggle-track { width: 48px; height: 28px; border-radius: 14px; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.1); transition: all 0.3s ease; cursor: pointer; position: relative; }
+  .toggle-track.active { background: rgba(0,223,193,0.3); border-color: rgba(0,223,193,0.5); }
+  .toggle-thumb { width: 22px; height: 22px; border-radius: 50%; background: #e1e1f0; position: absolute; top: 2px; left: 2px; transition: all 0.3s cubic-bezier(0.4,0,0.2,1); box-shadow: 0 1px 4px rgba(0,0,0,0.3); }
+  .toggle-track.active .toggle-thumb { left: 22px; background: #00dfc1; box-shadow: 0 0 8px rgba(0,223,193,0.5); }
+  select { -webkit-appearance: none; appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23c1c6d7' d='M6 8L1 3h10z'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 10px center; padding-right: 28px; }
+</style>
+</head>
+<body class="text-on-surface font-body h-screen w-full overflow-hidden flex flex-col relative antialiased page-enter">
+
+<!-- Ambient Background -->
+<div class="absolute top-[-10%] left-[-10%] w-96 h-96 bg-primary/5 rounded-[40%_60%_70%_30%] blur-xl pointer-events-none animate-spin"></div>
+<div class="absolute bottom-[10%] right-[-10%] w-[30rem] h-[30rem] bg-tertiary/5 rounded-[60%_40%_30%_70%] blur-xl pointer-events-none animate-spin-reverse"></div>
+
+<!-- TopAppBar -->
+<header class="flex justify-between items-center w-full px-6 py-4 text-primary font-headline font-bold tracking-tight z-40 shrink-0">
+  <div class="flex items-center gap-3 liquid-bubble px-4 py-2 rounded-2xl">
+    <span class="material-symbols-outlined text-primary text-xl">⚙️</span>
+    <span class="text-xl font-black tracking-tighter text-primary">Settings</span>
+  </div>
+  <button onclick="exportSettings()" class="w-10 h-10 rounded-full flex items-center justify-center liquid-bubble text-on-surface-variant hover:text-primary transition-colors">
+    <span class="material-symbols-outlined text-xl">📤</span>
+  </button>
+</header>
+
+<!-- Main Content -->
+<main class="flex-1 overflow-y-auto pb-32 flex flex-col items-center relative z-10 px-4">
+
+  <!-- Monitoring Section -->
+  <div class="w-full max-w-sm mb-5 slide-up" style="animation-delay:0s">
+    <span class="font-label text-[0.6rem] uppercase tracking-widest text-on-surface-variant/50 mb-3 block px-1">Monitoring</span>
+    <div class="liquid-card rounded-2xl overflow-hidden">
+      <!-- Service Toggle -->
+      <div class="flex items-center justify-between px-5 py-4 border-b border-white/5">
+        <div class="flex items-center gap-3">
+          <span class="material-symbols-outlined text-on-surface-variant/70 text-xl">📊</span>
+          <div>
+            <span class="font-body text-sm text-on-surface font-medium block">Network Monitor</span>
+            <span class="font-label text-[0.6rem] text-on-surface-variant/50">Real-time speed tracking</span>
+          </div>
+        </div>
+        <div class="toggle-track" id="toggleService" onclick="toggleSetting('serviceEnabled', this)">
+          <div class="toggle-thumb"></div>
+        </div>
+      </div>
+      <!-- Overlay Toggle -->
+      <div class="flex items-center justify-between px-5 py-4 border-b border-white/5">
+        <div class="flex items-center gap-3">
+          <span class="material-symbols-outlined text-on-surface-variant/70 text-xl">📌</span>
+          <div>
+            <span class="font-body text-sm text-on-surface font-medium block">Speed Overlay</span>
+            <span class="font-label text-[0.6rem] text-on-surface-variant/50">Floating speed indicator</span>
+          </div>
+        </div>
+        <div class="toggle-track" id="toggleOverlay" onclick="toggleSetting('overlayEnabled', this)">
+          <div class="toggle-thumb"></div>
+        </div>
+      </div>
+      <!-- Auto Start -->
+      <div class="flex items-center justify-between px-5 py-4">
+        <div class="flex items-center gap-3">
+          <span class="material-symbols-outlined text-on-surface-variant/70 text-xl">🔌</span>
+          <div>
+            <span class="font-body text-sm text-on-surface font-medium block">Auto Start</span>
+            <span class="font-label text-[0.6rem] text-on-surface-variant/50">Start on device boot</span>
+          </div>
+        </div>
+        <div class="toggle-track" id="toggleAutoStart" onclick="toggleSetting('autoStart', this)">
+          <div class="toggle-thumb"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Display Section -->
+  <div class="w-full max-w-sm mb-5 slide-up" style="animation-delay:0.08s">
+    <span class="font-label text-[0.6rem] uppercase tracking-widest text-on-surface-variant/50 mb-3 block px-1">Display</span>
+    <div class="liquid-card rounded-2xl overflow-hidden">
+      <!-- Dark Mode -->
+      <div class="flex items-center justify-between px-5 py-4 border-b border-white/5">
+        <div class="flex items-center gap-3">
+          <span class="material-symbols-outlined text-on-surface-variant/70 text-xl">🌙</span>
+          <div>
+            <span class="font-body text-sm text-on-surface font-medium block">Dark Mode</span>
+            <span class="font-label text-[0.6rem] text-on-surface-variant/50">Always dark theme</span>
+          </div>
+        </div>
+        <div class="toggle-track active" id="toggleDarkMode" onclick="toggleSetting('darkMode', this)">
+          <div class="toggle-thumb"></div>
+        </div>
+      </div>
+      <!-- Unit Preference -->
+      <div class="flex items-center justify-between px-5 py-4">
+        <div class="flex items-center gap-3">
+          <span class="material-symbols-outlined text-on-surface-variant/70 text-xl">📏</span>
+          <div>
+            <span class="font-body text-sm text-on-surface font-medium block">Speed Unit</span>
+            <span class="font-label text-[0.6rem] text-on-surface-variant/50">Mbps or MB/s</span>
+          </div>
+        </div>
+        <select id="unitPreference" onchange="saveSelect('unitPreference', this.value)" class="liquid-bubble rounded-xl px-3 py-2 text-sm font-body text-on-surface bg-transparent border-0 outline-none cursor-pointer">
+          <option value="Mbps">Mbps</option>
+          <option value="MB/s">MB/s</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <!-- Optimization Section -->
+  <div class="w-full max-w-sm mb-5 slide-up" style="animation-delay:0.16s">
+    <span class="font-label text-[0.6rem] uppercase tracking-widest text-on-surface-variant/50 mb-3 block px-1">Optimization</span>
+    <div class="liquid-card rounded-2xl overflow-hidden">
+      <!-- Data Saver -->
+      <div class="flex items-center justify-between px-5 py-4">
+        <div class="flex items-center gap-3">
+          <span class="material-symbols-outlined text-on-surface-variant/70 text-xl">💾</span>
+          <div>
+            <span class="font-body text-sm text-on-surface font-medium block">Data Saver Mode</span>
+            <span class="font-label text-[0.6rem] text-on-surface-variant/50">Reduce background data usage</span>
+          </div>
+        </div>
+        <div class="toggle-track" id="toggleDataSaver" onclick="toggleSetting('dataSaver', this)">
+          <div class="toggle-thumb"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- About Section -->
+  <div class="w-full max-w-sm mb-5 slide-up" style="animation-delay:0.24s">
+    <span class="font-label text-[0.6rem] uppercase tracking-widest text-on-surface-variant/50 mb-3 block px-1">About</span>
+    <div class="liquid-card rounded-2xl overflow-hidden">
+      <div class="flex items-center justify-between px-5 py-4">
+        <div class="flex items-center gap-3">
+          <span class="material-symbols-outlined text-on-surface-variant/70 text-xl">ℹ️</span>
+          <div>
+            <span class="font-body text-sm text-on-surface font-medium block">Version</span>
+            <span class="font-label text-[0.6rem] text-on-surface-variant/50">NetSpeed Meter</span>
+          </div>
+        </div>
+        <span class="font-label text-sm text-on-surface-variant/70">1.0.0</span>
+      </div>
+    </div>
+  </div>
+</main>
+
+<!-- BottomNavBar -->
+<nav class="fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-4 pb-6 pt-4 liquid-card border-t border-white/10 font-label text-[10px] font-semibold uppercase tracking-widest rounded-t-[2.5rem]">
+  <a class="flex flex-col items-center justify-center text-on-surface-variant/60 hover:text-primary transition-all px-4 py-1" href="home.html">
+    <span class="material-symbols-outlined mb-1 text-2xl">🏠</span> <span>Home</span>
+  </a>
+  <a class="flex flex-col items-center justify-center text-on-surface-variant/60 hover:text-primary transition-all px-4 py-1" href="area_test.html">
+    <span class="material-symbols-outlined mb-1 text-2xl">⚡</span> <span>Test</span>
+  </a>
+  <a class="flex flex-col items-center justify-center text-on-surface-variant/60 hover:text-primary transition-all px-4 py-1" href="history.html">
+    <span class="material-symbols-outlined mb-1 text-2xl">📋</span> <span>History</span>
+  </a>
+  <a class="flex flex-col items-center justify-center text-primary liquid-bubble rounded-2xl px-5 py-2" href="#" style="box-shadow: 0 4px 15px rgba(0,223,193,0.15);">
+    <span class="material-symbols-outlined mb-1 text-2xl">⚙️</span> <span>Settings</span>
+  </a>
+</nav>
+
+<script>
+function toggleSetting(key, el) {
+  var isActive = el.classList.contains('active');
+  var newVal = !isActive;
+  if (newVal) el.classList.add('active'); else el.classList.remove('active');
+  if (window.AndroidBridge) {
+    window.AndroidBridge.saveSettings(key, String(newVal));
+  }
+}
+
+function saveSelect(key, value) {
+  if (window.AndroidBridge) {
+    window.AndroidBridge.saveSettings(key, value);
+  }
+}
+
+function exportSettings() {
+  if (window.AndroidBridge) {
+    var json = window.AndroidBridge.exportAllSettings();
+    if (navigator.share) {
+      navigator.share({ title:'NetSpeed Settings', text: json });
+    }
+  }
+}
+
+function loadSetting(key, toggleId) {
+  if (window.AndroidBridge) {
+    var val = window.AndroidBridge.loadSettings(key);
+    var el = document.getElementById(toggleId);
+    if (el && val === 'true') el.classList.add('active');
+  }
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+  loadSetting('serviceEnabled', 'toggleService');
+  loadSetting('overlayEnabled', 'toggleOverlay');
+  loadSetting('autoStart', 'toggleAutoStart');
+  loadSetting('darkMode', 'toggleDarkMode');
+  loadSetting('dataSaver', 'toggleDataSaver');
+
+  if (window.AndroidBridge) {
+    var unit = window.AndroidBridge.loadSettings('unitPreference');
+    if (unit) document.getElementById('unitPreference').value = unit;
+  }
+});
+</script>
+</body></html>
